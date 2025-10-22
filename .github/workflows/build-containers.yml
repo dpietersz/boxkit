@@ -99,18 +99,17 @@ jobs:
             echo "SIGNING_SECRET not configured, skipping image signing"
             exit 0
           fi
-          # Debug: print all push outputs
-          echo "All push outputs:"
-          echo "${{ toJSON(steps.push.outputs) }}"
 
-          # Extract the image reference from the push output
-          # The push action outputs the image with tag, we need to add the digest
-          IMAGE_WITH_TAG="${{ steps.registry_case.outputs.lowercase }}/${{ matrix.containerfile }}:${{ env.IMAGE_TAGS }}"
-          DIGEST="${{ steps.push.outputs.digest }}"
-          IMAGE_REF="${IMAGE_WITH_TAG}@${DIGEST}"
+          # Get the image reference from push outputs
+          # registry-paths is a JSON array, so we extract the first element
+          REGISTRY_PATHS='${{ steps.push.outputs.registry-paths }}'
+          echo "Registry paths: ${REGISTRY_PATHS}"
 
-          echo "Signing image: ${IMAGE_REF}"
-          echo "COSIGN_PRIVATE_KEY length: ${#COSIGN_PRIVATE_KEY}"
+          # Extract first registry path using jq
+          IMAGE_REF=$(echo "${REGISTRY_PATHS}" | jq -r '.[0]')
+          echo "Image reference: ${IMAGE_REF}"
+
+          # Sign the image
           cosign sign -y --key env://COSIGN_PRIVATE_KEY "${IMAGE_REF}"
         env:
           COSIGN_EXPERIMENTAL: false
