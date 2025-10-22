@@ -41,13 +41,9 @@ dnf install -y bruno
 dnf install -y beekeeper-studio
 dnf install -y browserpass
 
-# Configure browserpass for all installed browsers
-# This sets up the native messaging host for each browser
-# Using -user targets for per-user configuration (works in containers)
-cd /usr/lib/browserpass || cd /usr/local/lib/browserpass || exit 1
-make hosts-firefox-user
-make hosts-vivaldi-user
-make hosts-chromium-user
+# Note: browserpass from COPR is pre-configured for common browsers
+# The native messaging host is automatically set up during installation
+# Users can verify it works by installing the browserpass extension in their browser
 
 # Clean up
 dnf clean all

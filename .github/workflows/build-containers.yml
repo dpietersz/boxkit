@@ -95,6 +95,10 @@ jobs:
       - name: Sign container image
         if: github.event_name != 'pull_request'
         run: |
+          if [ -z "$COSIGN_PRIVATE_KEY" ]; then
+            echo "SIGNING_SECRET not configured, skipping image signing"
+            exit 0
+          fi
           cosign sign -y --key env://COSIGN_PRIVATE_KEY ${{ steps.registry_case.outputs.lowercase }}/${{ matrix.containerfile }}@${TAGS}
         env:
           TAGS: ${{ steps.push.outputs.digest }}

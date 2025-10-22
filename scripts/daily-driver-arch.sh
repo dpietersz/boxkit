@@ -11,19 +11,23 @@ pacman -Syu --noconfirm
 # Install base packages from package list
 grep -v '^#' ./daily-driver-arch.packages | xargs pacman -S --noconfirm
 
-# Install yay (AUR helper)
+# Create a non-root user for building AUR packages (makepkg requires this)
+useradd -m -s /bin/bash builder || true
+
+# Install yay (AUR helper) as non-root user
 cd /tmp
 git clone https://aur.archlinux.org/yay.git
+chown -R builder:builder yay
 cd yay
-makepkg -si --noconfirm
+sudo -u builder makepkg -si --noconfirm
 cd /
 rm -rf /tmp/yay
 
-# Install GUI applications from AUR
-yay -S --noconfirm obsidian-bin
-yay -S --noconfirm anytype-bin
-yay -S --noconfirm polypane
-yay -S --noconfirm storageexplorer
+# Install GUI applications from AUR as non-root user
+sudo -u builder yay -S --noconfirm obsidian-bin
+sudo -u builder yay -S --noconfirm anytype-bin
+sudo -u builder yay -S --noconfirm polypane
+sudo -u builder yay -S --noconfirm storageexplorer
 
 # Clean up
 pacman -Sc --noconfirm
