@@ -14,6 +14,9 @@ grep -v '^#' ./daily-driver-arch.packages | xargs pacman -S --noconfirm
 # Create a non-root user for building AUR packages (makepkg requires this)
 useradd -m -s /bin/bash builder || true
 
+# Configure sudoers to allow passwordless sudo for builder user
+echo "builder ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers.d/builder
+
 # Install yay (AUR helper) as non-root user
 cd /tmp
 git clone https://aur.archlinux.org/yay.git

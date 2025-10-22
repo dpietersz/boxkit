@@ -94,6 +94,7 @@ jobs:
 
       - name: Sign container image
         if: github.event_name != 'pull_request'
+        continue-on-error: true
         run: |
           if [ -z "$COSIGN_PRIVATE_KEY" ]; then
             echo "SIGNING_SECRET not configured, skipping image signing"
