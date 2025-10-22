@@ -1,0 +1,33 @@
+# Essential system tools
+git
+pass
+zsh
+
+# Build tools (required for mise to compile tools from source)
+gcc
+make
+pkg-config
+openssl-devel
+
+# Multimedia and system utilities
+ffmpeg
+dbus-x11
+wl-clipboard
+xclip
+
+# GUI application dependencies
+libsecret
+jq
+libxcb
+libxkbcommon
+libxkbcommon-x11
+xcb-util-image
+xcb-util-keysyms
+xcb-util-renderutil
+xcb-util-wm
+libxkbfile
+libxkbfile-devel
+
+# Note: CLI tools (bat, eza, fzf, ripgrep, neovim, starship, chezmoi, etc.)
+# are managed via mise in your dotfiles repository
+

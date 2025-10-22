@@ -1,0 +1,16 @@
+FROM archlinux:latest
+
+LABEL com.github.containers.toolbox="true" \
+      usage="This image is meant to be used with the toolbox or distrobox command" \
+      summary="A daily-driver Arch toolbox with development tools and GUI applications from AUR" \
+      maintainer="pietersz@gmail.com"
+
+# Copy the setup scripts and package list
+COPY ../scripts/daily-driver-arch.sh /
+COPY ../scripts/distrobox-shims.sh /
+COPY ../packages/daily-driver-arch.packages /
+
+# Run the setup scripts
+RUN chmod +x daily-driver-arch.sh distrobox-shims.sh && /daily-driver-arch.sh
+RUN rm /daily-driver-arch.sh /distrobox-shims.sh /daily-driver-arch.packages
+

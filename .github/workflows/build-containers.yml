@@ -1,4 +1,4 @@
-name: build-boxkit
+name: build-containers
 on:
   workflow_dispatch: # allow manually triggering builds
   pull_request:
@@ -27,9 +27,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        containerfile: 
+        containerfile:
           - boxkit
-       #- fedora-example # Included as an example to demonstrate multi-image builds, uncomment to build the fedora-example container too
+          - daily-driver-fedora
+          - daily-driver-arch
     steps:
       # Clone code to runner
       - name: Checkout
