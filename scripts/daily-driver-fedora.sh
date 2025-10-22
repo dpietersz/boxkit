@@ -19,27 +19,27 @@ dnf install -y https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-
 dnf swap -y ffmpeg-free ffmpeg --allowerasing || dnf install -y ffmpeg --allowerasing
 
 # Enable COPR repositories for GUI applications
-dnf copr enable -y che/zed
-dnf copr enable -y sneexy/zen-browser
-dnf copr enable -y matthaigh27/cursor
-dnf copr enable -y owlburst/bruno
-dnf copr enable -y akahl/browserpass
+dnf copr enable -y che/zed || true
+dnf copr enable -y sneexy/zen-browser || true
+dnf copr enable -y matthaigh27/cursor || true
+dnf copr enable -y owlburst/bruno || true
+dnf copr enable -y akahl/browserpass || true
 
 # Add Vivaldi official repository
-dnf config-manager --add-repo https://repo.vivaldi.com/stable/vivaldi-fedora.repo
+dnf config-manager --add-repo https://repo.vivaldi.com/stable/vivaldi-fedora.repo || true
 
 # Add Beekeeper Studio official repository
-curl -o /etc/yum.repos.d/beekeeper-studio.repo https://rpm.beekeeperstudio.io/beekeeper-studio.repo
-rpm --import https://rpm.beekeeperstudio.io/beekeeper.key
+curl -o /etc/yum.repos.d/beekeeper-studio.repo https://rpm.beekeeperstudio.io/beekeeper-studio.repo || true
+rpm --import https://rpm.beekeeperstudio.io/beekeeper.key || true
 
 # Install GUI applications from COPR and official repos
-dnf install -y zed
-dnf install -y zen-browser
-dnf install -y vivaldi-stable
-dnf install -y cursor
-dnf install -y bruno
-dnf install -y beekeeper-studio
-dnf install -y browserpass
+dnf install -y zed || true
+dnf install -y zen-browser || true
+dnf install -y vivaldi-stable || true
+dnf install -y cursor || true
+dnf install -y bruno || true
+dnf install -y beekeeper-studio || true
+dnf install -y browserpass || true
 
 # Note: browserpass from COPR is pre-configured for common browsers
 # The native messaging host is automatically set up during installation
