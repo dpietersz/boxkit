@@ -100,16 +100,30 @@ jobs:
             exit 0
           fi
 
+          # Debug: print all push outputs
+          echo "All push outputs:"
+          echo "${{ toJSON(steps.push.outputs) }}"
+
           # Get the image reference from push outputs
-          # Use registry-path (singular) which is a string
+          # The push action outputs the image with tag and digest
+          # Format: ghcr.io/owner/image:tag@sha256:digest
           IMAGE_REF='${{ steps.push.outputs.registry-path }}'
-          echo "Image reference: ${IMAGE_REF}"
+
+          # If registry-path is empty, try to construct it manually
+          if [ -z "${IMAGE_REF}" ]; then
+            echo "registry-path is empty, constructing image reference manually"
+            REGISTRY='${{ steps.registry_case.outputs.lowercase }}'
+            IMAGE='${{ matrix.containerfile }}'
+            TAG='${{ env.IMAGE_TAGS }}'
+            DIGEST='${{ steps.push.outputs.digest }}'
+            IMAGE_REF="${REGISTRY}/${IMAGE}:${TAG}@${DIGEST}"
+          fi
+
+          echo "Signing image: ${IMAGE_REF}"
 
           # Verify the image reference is not empty
-          if [ -z "${IMAGE_REF}" ]; then
-            echo "ERROR: registry-path output is empty"
-            echo "Available outputs:"
-            echo "${{ toJSON(steps.push.outputs) }}"
+          if [ -z "${IMAGE_REF}" ] || [ "${IMAGE_REF}" = "@" ]; then
+            echo "ERROR: Could not construct image reference"
             exit 1
           fi
 
