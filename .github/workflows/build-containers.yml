@@ -101,13 +101,17 @@ jobs:
           fi
 
           # Get the image reference from push outputs
-          # registry-paths is a JSON array, so we extract the first element
-          REGISTRY_PATHS='${{ steps.push.outputs.registry-paths }}'
-          echo "Registry paths: ${REGISTRY_PATHS}"
-
-          # Extract first registry path using jq
-          IMAGE_REF=$(echo "${REGISTRY_PATHS}" | jq -r '.[0]')
+          # Use registry-path (singular) which is a string
+          IMAGE_REF='${{ steps.push.outputs.registry-path }}'
           echo "Image reference: ${IMAGE_REF}"
+
+          # Verify the image reference is not empty
+          if [ -z "${IMAGE_REF}" ]; then
+            echo "ERROR: registry-path output is empty"
+            echo "Available outputs:"
+            echo "${{ toJSON(steps.push.outputs) }}"
+            exit 1
+          fi
 
           # Sign the image
           cosign sign -y --key env://COSIGN_PRIVATE_KEY "${IMAGE_REF}"
