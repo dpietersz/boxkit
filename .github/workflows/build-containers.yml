@@ -99,9 +99,12 @@ jobs:
             echo "SIGNING_SECRET not configured, skipping image signing"
             exit 0
           fi
-          # Use the first registry path from the push output
-          REGISTRY_PATH=$(echo '${{ steps.push.outputs.registry-paths }}' | jq -r '.[0]')
-          IMAGE_REF="${REGISTRY_PATH}@${{ steps.push.outputs.digest }}"
+          # Debug: print the outputs
+          echo "registry-path: ${{ steps.push.outputs.registry-path }}"
+          echo "digest: ${{ steps.push.outputs.digest }}"
+
+          # Use registry-path and digest to construct the image reference
+          IMAGE_REF="${{ steps.push.outputs.registry-path }}@${{ steps.push.outputs.digest }}"
           echo "Signing image: ${IMAGE_REF}"
           echo "COSIGN_PRIVATE_KEY length: ${#COSIGN_PRIVATE_KEY}"
           cosign sign -y --key env://COSIGN_PRIVATE_KEY "${IMAGE_REF}"
