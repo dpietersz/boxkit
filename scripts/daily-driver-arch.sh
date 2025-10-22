@@ -26,8 +26,11 @@ sudo -u builder makepkg -si --noconfirm
 cd /
 rm -rf /tmp/yay
 
-# Install GUI applications from AUR as non-root user
-sudo -u builder yay -S --noconfirm obsidian-bin
+# Install GUI applications
+# Use official obsidian package from extra repository
+pacman -S --noconfirm obsidian
+
+# Install AUR packages as non-root user
 sudo -u builder yay -S --noconfirm anytype-bin
 sudo -u builder yay -S --noconfirm polypane
 sudo -u builder yay -S --noconfirm storageexplorer
