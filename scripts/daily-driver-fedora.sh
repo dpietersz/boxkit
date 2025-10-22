@@ -8,6 +8,14 @@ set -e
 # Update the container
 dnf update -y
 
+# Clone and run dotfiles setup before installing packages
+# This ensures mise and chezmoi are available for the rest of the setup
+cd /tmp
+git clone https://github.com/dpietersz/dotfiles.git
+cd dotfiles
+./setup
+cd /
+
 # Install base packages from package list
 grep -v '^#' ./daily-driver-fedora.packages | xargs dnf install -y
 
