@@ -127,6 +127,13 @@ jobs:
             exit 1
           fi
 
+          # Debug: Check if COSIGN_PASSWORD is set
+          if [ -z "$COSIGN_PASSWORD" ]; then
+            echo "WARNING: COSIGN_PASSWORD is not set"
+          else
+            echo "COSIGN_PASSWORD is set (length: ${#COSIGN_PASSWORD})"
+          fi
+
           # Sign the image
           cosign sign -y --key env://COSIGN_PRIVATE_KEY "${IMAGE_REF}"
         env:
