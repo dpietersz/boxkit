@@ -1,0 +1,16 @@
+FROM quay.io/toolbx/arch-toolbox:latest
+
+LABEL com.github.containers.toolbox="true" \
+      usage="This image is meant to be used with the toolbox or distrobox command" \
+      summary="A data management Arch toolbox with Storage Explorer, Beekeeper Studio, and Bruno, designed as a Flatpak replacement for Bluefin Linux" \
+      maintainer="pietersz@gmail.com"
+
+# Copy the setup scripts and package list
+COPY ../scripts/data-toolbox.sh /
+COPY ../scripts/distrobox-shims.sh /
+COPY ../packages/data-toolbox.packages /
+
+# Run the setup scripts
+RUN chmod +x data-toolbox.sh distrobox-shims.sh && /data-toolbox.sh
+RUN rm /data-toolbox.sh /distrobox-shims.sh /data-toolbox.packages
+

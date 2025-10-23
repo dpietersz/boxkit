@@ -1,0 +1,16 @@
+FROM quay.io/toolbx/arch-toolbox:latest
+
+LABEL com.github.containers.toolbox="true" \
+      usage="This image is meant to be used with the toolbox or distrobox command" \
+      summary="A notetaking Arch toolbox with Obsidian and Anytype, designed as a Flatpak replacement for Bluefin Linux" \
+      maintainer="pietersz@gmail.com"
+
+# Copy the setup scripts and package list
+COPY ../scripts/notetaking-toolbox.sh /
+COPY ../scripts/distrobox-shims.sh /
+COPY ../packages/notetaking-toolbox.packages /
+
+# Run the setup scripts
+RUN chmod +x notetaking-toolbox.sh distrobox-shims.sh && /notetaking-toolbox.sh
+RUN rm /notetaking-toolbox.sh /distrobox-shims.sh /notetaking-toolbox.packages
+

@@ -21,6 +21,9 @@ jobs:
         containerfile:
           - boxkit
           - dev-apps
+          - notetaking-toolbox
+          - data-toolbox
+          - browser-toolbox
     steps:
       # Free up disk space
       - name: Free up disk space

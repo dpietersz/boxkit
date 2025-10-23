@@ -1,0 +1,16 @@
+FROM quay.io/toolbx/arch-toolbox:latest
+
+LABEL com.github.containers.toolbox="true" \
+      usage="This image is meant to be used with the toolbox or distrobox command" \
+      summary="A browser and web development Arch toolbox with Zen Browser, Chromium, Polypane, and more, designed as a Flatpak replacement for Bluefin Linux" \
+      maintainer="pietersz@gmail.com"
+
+# Copy the setup scripts and package list
+COPY ../scripts/browser-toolbox.sh /
+COPY ../scripts/distrobox-shims.sh /
+COPY ../packages/browser-toolbox.packages /
+
+# Run the setup scripts
+RUN chmod +x browser-toolbox.sh distrobox-shims.sh && /browser-toolbox.sh
+RUN rm /browser-toolbox.sh /distrobox-shims.sh /browser-toolbox.packages
+

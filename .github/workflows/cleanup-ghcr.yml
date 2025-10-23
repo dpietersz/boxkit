@@ -27,3 +27,27 @@ jobs:
           min-versions-to-keep: 5
           delete-only-untagged-versions: 'false'
 
+      - name: Delete old notetaking-toolbox images
+        uses: actions/delete-package-versions@v4
+        with:
+          package-name: 'notetaking-toolbox'
+          package-type: 'container'
+          min-versions-to-keep: 5
+          delete-only-untagged-versions: 'false'
+
+      - name: Delete old data-toolbox images
+        uses: actions/delete-package-versions@v4
+        with:
+          package-name: 'data-toolbox'
+          package-type: 'container'
+          min-versions-to-keep: 5
+          delete-only-untagged-versions: 'false'
+
+      - name: Delete old browser-toolbox images
+        uses: actions/delete-package-versions@v4
+        with:
+          package-name: 'browser-toolbox'
+          package-type: 'container'
+          min-versions-to-keep: 5
+          delete-only-untagged-versions: 'false'
+
