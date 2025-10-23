@@ -9,7 +9,7 @@ set -e
 pacman -Syu --noconfirm
 
 # Install base packages from package list
-grep -v '^#' ./daily-driver-arch.packages | xargs pacman -S --noconfirm
+grep -v '^#' ./dev-apps.packages | xargs pacman -S --noconfirm
 
 # Create a non-root user for building AUR packages (makepkg requires this)
 useradd -m -s /bin/bash builder || true
@@ -36,6 +36,14 @@ sudo -u builder yay -S --noconfirm polypane
 sudo -u builder yay -S --noconfirm storageexplorer
 # Install bruno-bin with error handling to avoid debug package conflicts
 sudo -u builder yay -S --noconfirm bruno-bin || true
+
+# Install development and productivity applications from AUR
+sudo -u builder yay -S --noconfirm zed-git
+sudo -u builder yay -S --noconfirm zen-browser-bin
+sudo -u builder yay -S --noconfirm beekeeper-studio-bin
+sudo -u builder yay -S --noconfirm qutebrowser-git
+sudo -u builder yay -S --noconfirm browserpass-git
+sudo -u builder yay -S --noconfirm espanso-wayland || true
 
 # Clean up
 pacman -Sc --noconfirm

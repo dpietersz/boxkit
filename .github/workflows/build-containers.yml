@@ -29,8 +29,7 @@ jobs:
       matrix:
         containerfile:
           - boxkit
-          - daily-driver-fedora
-          - daily-driver-arch
+          - dev-apps
     steps:
       # Clone code to runner
       - name: Checkout
