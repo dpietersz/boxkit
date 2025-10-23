@@ -6,8 +6,21 @@ name: release-please
 jobs:
   release-please:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
       - uses: googleapis/release-please-action@c2a5a2bd6a758a0937f1ddb1e8950609867ed15c # v4
+        id: release
         with:
           release-type: simple
-          package-name: release-please-action
+          package-name: boxkit
+          manifest-file: .release-please-manifest.json
+
+      # Output release information for debugging
+      - name: Show release output
+        if: steps.release.outputs.release_created
+        run: |
+          echo "Release created: ${{ steps.release.outputs.release_created }}"
+          echo "Release tag: ${{ steps.release.outputs.tag_name }}"
+          echo "Release version: ${{ steps.release.outputs.version }}"

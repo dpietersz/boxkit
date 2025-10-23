@@ -1,19 +1,10 @@
 name: build-containers
 on:
-  workflow_dispatch: # allow manually triggering builds
-  pull_request:
-    branches:
-      - main
   push:
-    branches:
-      - main
-    paths-ignore: # don't rebuild on documentation change
-      - '**.md'
-  schedule:
-    - cron: '0 0 * * TUE'
+    tags:
+      - 'v*' # Only trigger on version tags (e.g., v1.0.0)
 
 env:
-    IMAGE_TAGS: latest
     IMAGE_REGISTRY: ghcr.io/${{ github.repository_owner }}
 
 jobs:
@@ -35,6 +26,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
 
+      # Extract version from git tag
+      - name: Extract version
+        id: version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "Version: ${VERSION}"
+
       # Build metadata
       - name: Image Metadata
         uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f # v5
@@ -53,7 +52,7 @@ jobs:
           containerfiles: |
             ./ContainerFiles/${{ matrix.containerfile }}
           image: ${{ matrix.containerfile }}
-          tags: ${{ env.IMAGE_TAGS }}
+          tags: ${{ steps.version.outputs.version }} latest
           labels: ${{ steps.meta.outputs.labels }}
           oci: true
           
@@ -113,7 +112,7 @@ jobs:
             echo "registry-path is empty, constructing image reference manually"
             REGISTRY='${{ steps.registry_case.outputs.lowercase }}'
             IMAGE='${{ matrix.containerfile }}'
-            TAG='${{ env.IMAGE_TAGS }}'
+            TAG='${{ steps.version.outputs.version }}'
             DIGEST='${{ steps.push.outputs.digest }}'
             IMAGE_REF="${REGISTRY}/${IMAGE}:${TAG}@${DIGEST}"
           fi
