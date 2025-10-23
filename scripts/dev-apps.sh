@@ -38,7 +38,7 @@ sudo -u builder yay -S --noconfirm storageexplorer
 sudo -u builder yay -S --noconfirm bruno-bin || true
 
 # Install development and productivity applications from AUR
-sudo -u builder yay -S --noconfirm zed-pre-bin
+sudo -u builder yay -S --noconfirm zed-preview-bin
 sudo -u builder yay -S --noconfirm zen-browser-bin
 sudo -u builder yay -S --noconfirm beekeeper-studio-bin
 pacman -S --noconfirm qutebrowser
