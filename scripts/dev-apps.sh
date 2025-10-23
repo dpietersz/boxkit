@@ -38,11 +38,11 @@ sudo -u builder yay -S --noconfirm storageexplorer
 sudo -u builder yay -S --noconfirm bruno-bin || true
 
 # Install development and productivity applications from AUR
-sudo -u builder yay -S --noconfirm zed-git
+sudo -u builder yay -S --noconfirm zed-pre-bin
 sudo -u builder yay -S --noconfirm zen-browser-bin
 sudo -u builder yay -S --noconfirm beekeeper-studio-bin
-sudo -u builder yay -S --noconfirm qutebrowser-git
-sudo -u builder yay -S --noconfirm browserpass-git
+pacman -S --noconfirm qutebrowser
+pacman -S --noconfirm browserpass
 sudo -u builder yay -S --noconfirm espanso-wayland || true
 
 # Clean up
