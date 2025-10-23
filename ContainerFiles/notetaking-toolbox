@@ -8,9 +8,9 @@ LABEL com.github.containers.toolbox="true" \
 # Copy the setup scripts and package list
 COPY ../scripts/notetaking-toolbox.sh /
 COPY ../scripts/distrobox-shims.sh /
-COPY ../packages/notetaking-toolbox.packages /
+COPY ../packages/toolbox.packages /
 
 # Run the setup scripts
 RUN chmod +x notetaking-toolbox.sh distrobox-shims.sh && /notetaking-toolbox.sh
-RUN rm /notetaking-toolbox.sh /distrobox-shims.sh /notetaking-toolbox.packages
+RUN rm /notetaking-toolbox.sh /distrobox-shims.sh /toolbox.packages
 

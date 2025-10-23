@@ -9,7 +9,7 @@ set -e
 pacman -Syu --noconfirm
 
 # Install base packages from package list
-grep -v '^#' ./data-toolbox.packages | xargs pacman -S --noconfirm
+grep -v '^#' ./toolbox.packages | xargs pacman -S --noconfirm
 
 # Create a non-root user for building AUR packages (makepkg requires this)
 useradd -m -s /bin/bash builder || true
