@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.7](https://github.com/dpietersz/boxkit/compare/v1.4.6...v1.4.7) (2025-10-23)
+
+
+### Bug Fixes
+
+* remove espanso-wayland to reduce build time and avoid fakeroot errors ([cb4b859](https://github.com/dpietersz/boxkit/commit/cb4b8591bc4a65d380b1a7ab808738954511e8a9))
+
 ## [1.4.6](https://github.com/dpietersz/boxkit/compare/v1.4.5...v1.4.6) (2025-10-23)
 
 
