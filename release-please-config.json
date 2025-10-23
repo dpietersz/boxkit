@@ -1,6 +1,7 @@
 {
   "release-type": "simple",
   "include-component-in-tag": false,
+  "draft": false,
   "pull-request-title-pattern": "chore: release ${version}",
   "pull-request-header": "## Release v${version}\n\nThis PR contains the following changes:",
   "changelog-sections": [
