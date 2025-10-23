@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.5](https://github.com/dpietersz/boxkit/compare/v1.4.4...v1.4.5) (2025-10-23)
+
+
+### Bug Fixes
+
+* test PAT-based release workflow ([1489635](https://github.com/dpietersz/boxkit/commit/14896350cdc0fbd57648f31bb6c7409daced2e0f))
+
 ## [1.4.4](https://github.com/dpietersz/boxkit/compare/v1.4.3...v1.4.4) (2025-10-23)
 
 
