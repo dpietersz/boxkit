@@ -28,48 +28,7 @@ curl -o /etc/yum.repos.d/beekeeper-studio.repo https://rpm.beekeeperstudio.io/be
 rpm --import https://rpm.beekeeperstudio.io/beekeeper.key || true
 
 # Install GUI applications from COPR and official repos
-dnf install -y zed zen-browser beekeeper-studio browserpass || true
-
-# Install Vivaldi from official repository
-# Download and install the official Vivaldi RPM
-echo "Attempting to download Vivaldi..."
-VIVALDI_VERSION=$(curl -s https://downloads.vivaldi.com/stable/ | grep -oP 'vivaldi-stable-\K[0-9.]+' | head -1)
-if [ -n "$VIVALDI_VERSION" ]; then
-  echo "Found Vivaldi version: $VIVALDI_VERSION"
-  curl -L -o /tmp/vivaldi-stable.rpm "https://downloads.vivaldi.com/stable/vivaldi-stable-${VIVALDI_VERSION}.x86_64.rpm" || true
-  if [ -f /tmp/vivaldi-stable.rpm ]; then
-    dnf install -y /tmp/vivaldi-stable.rpm || true
-    rm /tmp/vivaldi-stable.rpm
-  fi
-else
-  echo "Could not determine Vivaldi version, skipping Vivaldi installation"
-fi
-
-# Install Cursor IDE from AppImage
-echo "Attempting to download Cursor IDE..."
-mkdir -p /opt/cursor
-if curl -L -o /opt/cursor/Cursor.AppImage https://download.cursor.sh/linux/appImage/x64; then
-  chmod +x /opt/cursor/Cursor.AppImage
-  # Create symlink for easy access
-  ln -sf /opt/cursor/Cursor.AppImage /usr/local/bin/cursor || true
-  echo "Cursor IDE installed successfully"
-else
-  echo "Failed to download Cursor IDE, skipping"
-  rm -rf /opt/cursor
-fi
-
-# Install Bruno API client from AppImage
-echo "Attempting to download Bruno API client..."
-mkdir -p /opt/bruno
-if curl -L -o /opt/bruno/Bruno.AppImage https://cdn.usebruno.com/downloads/latest/bruno_latest_linux_x64.AppImage; then
-  chmod +x /opt/bruno/Bruno.AppImage
-  # Create symlink for easy access
-  ln -sf /opt/bruno/Bruno.AppImage /usr/local/bin/bruno || true
-  echo "Bruno API client installed successfully"
-else
-  echo "Failed to download Bruno API client, skipping"
-  rm -rf /opt/bruno
-fi
+dnf install -y zed zen-browser beekeeper-studio browserpass chromium qutebrowser || true
 
 # Note: browserpass from COPR is pre-configured for common browsers
 # The native messaging host is automatically set up during installation
