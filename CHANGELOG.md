@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.8](https://github.com/dpietersz/boxkit/compare/v1.4.7...v1.4.8) (2025-10-23)
+
+
+### Bug Fixes
+
+* add disk space cleanup and aggressive cache cleanup to prevent build failures ([ac7376e](https://github.com/dpietersz/boxkit/commit/ac7376e0f64c2a0a46301a778740e39ba91f4971))
+
 ## [1.4.7](https://github.com/dpietersz/boxkit/compare/v1.4.6...v1.4.7) (2025-10-23)
 
 
