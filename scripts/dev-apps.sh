@@ -44,6 +44,14 @@ sudo -u builder yay -S --noconfirm beekeeper-studio-bin
 pacman -S --noconfirm qutebrowser
 pacman -S --noconfirm browserpass
 
-# Clean up
+# Clean up yay cache and build artifacts
+sudo -u builder yay -Sc --noconfirm
+sudo -u builder yay -Scc --noconfirm
+
+# Remove yay build cache
+rm -rf /home/builder/.cache/yay
+
+# Clean up pacman cache
 pacman -Sc --noconfirm
+pacman -Scc --noconfirm
 
