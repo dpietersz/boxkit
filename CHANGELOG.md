@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.4.6](https://github.com/dpietersz/boxkit/compare/v1.4.5...v1.4.6) (2025-10-23)
+
+
+### Bug Fixes
+
+* test performance optimizations for build ([d2c67d0](https://github.com/dpietersz/boxkit/commit/d2c67d0f73d7dbe5fb586ae77cc2152236776607))
+
+
+### Performance Improvements
+
+* replace git source builds with pre-built binaries to reduce build time ([c536b15](https://github.com/dpietersz/boxkit/commit/c536b153a346168b1e05b9b3f1b1a1367b8c8b6e))
+
 ## [1.4.5](https://github.com/dpietersz/boxkit/compare/v1.4.4...v1.4.5) (2025-10-23)
 
 
