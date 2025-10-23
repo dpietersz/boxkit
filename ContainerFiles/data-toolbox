@@ -8,9 +8,9 @@ LABEL com.github.containers.toolbox="true" \
 # Copy the setup scripts and package list
 COPY ../scripts/data-toolbox.sh /
 COPY ../scripts/distrobox-shims.sh /
-COPY ../packages/data-toolbox.packages /
+COPY ../packages/toolbox.packages /
 
 # Run the setup scripts
 RUN chmod +x data-toolbox.sh distrobox-shims.sh && /data-toolbox.sh
-RUN rm /data-toolbox.sh /distrobox-shims.sh /data-toolbox.packages
+RUN rm /data-toolbox.sh /distrobox-shims.sh /toolbox.packages
 
