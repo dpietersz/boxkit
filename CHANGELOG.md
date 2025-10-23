@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.3](https://github.com/dpietersz/boxkit/compare/v1.4.2...v1.4.3) (2025-10-23)
+
+
+### Bug Fixes
+
+* test tag trigger for build-containers workflow ([d608d43](https://github.com/dpietersz/boxkit/commit/d608d4340b8c98945bbdbfa2bb00fb7183dc3d79))
+
 ## [1.4.2](https://github.com/dpietersz/boxkit/compare/v1.4.1...v1.4.2) (2025-10-23)
 
 
