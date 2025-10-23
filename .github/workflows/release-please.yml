@@ -18,6 +18,14 @@ jobs:
           token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
           default-branch: main
 
+      # Debug: Print all release-please outputs
+      - name: Print all release outputs
+        run: |
+          echo "All outputs: ${{ toJson(steps.release.outputs) }}"
+          echo "release_created: ${{ steps.release.outputs.release_created }}"
+          echo "pr: ${{ steps.release.outputs.pr }}"
+          echo "prs: ${{ steps.release.outputs.prs }}"
+
       # Output release information for debugging
       - name: Show release output
         if: steps.release.outputs.release_created
