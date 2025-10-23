@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.1](https://github.com/dpietersz/boxkit/compare/v1.4.0...v1.4.1) (2025-10-23)
+
+
+### Bug Fixes
+
+* remove non-existent packages from dev-apps ([98f19cb](https://github.com/dpietersz/boxkit/commit/98f19cb284ae0b3ebd7feb5c9c3935821ed0f66e))
+
 ## [1.4.0](https://github.com/dpietersz/boxkit/compare/v1.3.0...v1.4.0) (2025-10-23)
 
 
