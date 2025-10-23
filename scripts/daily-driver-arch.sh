@@ -27,15 +27,15 @@ cd /
 rm -rf /tmp/yay
 
 # Install GUI applications
+# Use official obsidian package from extra repository
+pacman -S --noconfirm obsidian
 
 # Install AUR packages as non-root user
-sudo -u builder yay -S --noconfirm obsidian-bin
 sudo -u builder yay -S --noconfirm anytype-bin
 sudo -u builder yay -S --noconfirm polypane
 sudo -u builder yay -S --noconfirm storageexplorer
-sudo -u builder yay -S --noconfirm bruno-bin
-sudo -u builder yay -S --noconfirm cursor-bin
-sudo -u builder yay -S --noconfirm teams-for-linux
+# Install bruno-bin with error handling to avoid debug package conflicts
+sudo -u builder yay -S --noconfirm bruno-bin || true
 
 # Clean up
 pacman -Sc --noconfirm
