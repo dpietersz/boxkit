@@ -43,7 +43,6 @@ sudo -u builder yay -S --noconfirm zen-browser-bin
 sudo -u builder yay -S --noconfirm beekeeper-studio-bin
 pacman -S --noconfirm qutebrowser
 pacman -S --noconfirm browserpass
-sudo -u builder yay -S --noconfirm espanso-wayland || true
 
 # Clean up
 pacman -Sc --noconfirm
