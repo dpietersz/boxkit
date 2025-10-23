@@ -1,5 +1,32 @@
 # Changelog
 
+## [1.4.0](https://github.com/dpietersz/boxkit/compare/v1.3.0...v1.4.0) (2025-10-23)
+
+
+### Features
+
+* add espanso text expander to Fedora daily-driver ([713e542](https://github.com/dpietersz/boxkit/commit/713e5426f210fd24421b92590dcef65711a668ab))
+* integrate dotfiles setup into container builds ([3589b3d](https://github.com/dpietersz/boxkit/commit/3589b3d238b409b1ae64c0cf85470da4e75e3dc5))
+
+
+### Bug Fixes
+
+* add COSIGN_PASSWORD environment variable for encrypted key decryption ([18c2ae5](https://github.com/dpietersz/boxkit/commit/18c2ae57f4b430c1715fd1f0c9cfeb39f6c9f90d))
+* construct cosign image reference using registry and tag ([db78013](https://github.com/dpietersz/boxkit/commit/db780130ed8d3280f95f60d360e245552b9af829))
+* improve cosign signing and fedora build robustness ([5bab779](https://github.com/dpietersz/boxkit/commit/5bab7794ab71768838b924550617256adea8f283))
+* improve cosign signing error diagnostics ([89524df](https://github.com/dpietersz/boxkit/commit/89524df24c14ee1d80aef40e903842fbc89f6499))
+* improve cosign signing with fallback image reference construction ([38930b0](https://github.com/dpietersz/boxkit/commit/38930b09569e47b86dfdd46da352d68f051e9d3d))
+* improve error handling in Fedora build script ([b51be14](https://github.com/dpietersz/boxkit/commit/b51be14bc7817ba3108f6135a5ab93de7a7a6356))
+* remove dotfiles setup from container build scripts ([a0b1518](https://github.com/dpietersz/boxkit/commit/a0b151822e87cd4c5db883eff7499a139d85fba2))
+* resolve Arch package installation issues ([1519f72](https://github.com/dpietersz/boxkit/commit/1519f72e2906fb06a2502696dd65f20d0fed68e1))
+* resolve Fedora package installation failures ([c8f2d33](https://github.com/dpietersz/boxkit/commit/c8f2d330a494c785435dd96007a67818783bc592))
+* resolve remaining GitHub Actions build failures ([f456fa4](https://github.com/dpietersz/boxkit/commit/f456fa4ab3e72a40226fdec98bfcdd53e815d784))
+* simplify cosign signing image reference construction ([4ee3f38](https://github.com/dpietersz/boxkit/commit/4ee3f38207381a84585db76a8ac73277b3ab0f7b))
+* switch to AUR version of obsidian and add additional GUI applications ([17767e0](https://github.com/dpietersz/boxkit/commit/17767e0e6252d8e343198e3f759888b98655e4c9))
+* use correct image reference format for cosign signing ([2932484](https://github.com/dpietersz/boxkit/commit/293248494c41adc82734a874abe4f1b8988b40ff))
+* use registry-path output directly for cosign signing ([ca6e8c3](https://github.com/dpietersz/boxkit/commit/ca6e8c39411784fd69ca8cfc1ddff1d77c0c730c))
+* use registry-paths output for cosign signing ([b7d0d2f](https://github.com/dpietersz/boxkit/commit/b7d0d2ffd51326c8c11e29291ae989e709cb1463))
+
 ## [1.3.0](https://github.com/dpietersz/boxkit/compare/v1.2.0...v1.3.0) (2025-10-22)
 
 
