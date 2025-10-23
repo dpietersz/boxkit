@@ -27,8 +27,11 @@ dnf copr enable -y akahl/browserpass || true
 curl -o /etc/yum.repos.d/beekeeper-studio.repo https://rpm.beekeeperstudio.io/beekeeper-studio.repo || true
 rpm --import https://rpm.beekeeperstudio.io/beekeeper.key || true
 
+# Add Terra repository for espanso
+dnf copr enable -y terra/terra || true
+
 # Install GUI applications from COPR and official repos
-dnf install -y zed zen-browser beekeeper-studio browserpass chromium qutebrowser || true
+dnf install -y zed zen-browser beekeeper-studio browserpass chromium qutebrowser espanso-x11 || true
 
 # Note: browserpass from COPR is pre-configured for common browsers
 # The native messaging host is automatically set up during installation
