@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.2](https://github.com/dpietersz/boxkit/compare/v1.4.1...v1.4.2) (2025-10-23)
+
+
+### Bug Fixes
+
+* test release workflow trigger ([e395bde](https://github.com/dpietersz/boxkit/commit/e395bde35538499bea206453260d9f0a2e468e3e))
+
 ## [1.4.1](https://github.com/dpietersz/boxkit/compare/v1.4.0...v1.4.1) (2025-10-23)
 
 
