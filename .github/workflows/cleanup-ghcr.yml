@@ -1,0 +1,29 @@
+name: cleanup-ghcr
+
+on:
+  schedule:
+    - cron: "0 2 * * 0"  # Weekly on Sunday at 2 AM UTC
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    steps:
+      - name: Delete old boxkit images
+        uses: actions/delete-package-versions@v4
+        with:
+          package-name: 'boxkit'
+          package-type: 'container'
+          min-versions-to-keep: 5
+          delete-only-untagged-versions: 'false'
+
+      - name: Delete old dev-apps images
+        uses: actions/delete-package-versions@v4
+        with:
+          package-name: 'dev-apps'
+          package-type: 'container'
+          min-versions-to-keep: 5
+          delete-only-untagged-versions: 'false'
+
