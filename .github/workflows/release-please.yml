@@ -16,6 +16,7 @@ jobs:
           release-type: simple
           package-name: boxkit
           manifest-file: .release-please-manifest.json
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
 
       # Output release information for debugging
       - name: Show release output
