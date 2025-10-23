@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.4.4](https://github.com/dpietersz/boxkit/compare/v1.4.3...v1.4.4) (2025-10-23)
+
+
+### Bug Fixes
+
+* final test of tag trigger workflow ([df46230](https://github.com/dpietersz/boxkit/commit/df46230edf67deea663529c48d0850a977a7e016))
+* test v1.4.4 release ([63fbb22](https://github.com/dpietersz/boxkit/commit/63fbb22000e4551539ed79eb7cabb31c18daeb2c))
+
 ## [1.4.3](https://github.com/dpietersz/boxkit/compare/v1.4.2...v1.4.3) (2025-10-23)
 
 
