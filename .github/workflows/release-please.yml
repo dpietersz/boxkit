@@ -13,8 +13,7 @@ jobs:
       - uses: googleapis/release-please-action@c2a5a2bd6a758a0937f1ddb1e8950609867ed15c # v4
         id: release
         with:
-          release-type: simple
-          package-name: boxkit
+          config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
           token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
 
