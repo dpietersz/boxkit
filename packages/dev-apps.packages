@@ -1,28 +1,16 @@
 # Base development tools (includes build tools for AUR and mise)
 base-devel
 
-# Essential system tools
+# Essential system tools (not installed with mise)
 git
 pass
 zsh
+llm
+ncdu
+ncurses
+speedtest-cli
+zstd
 
-# Multimedia and system utilities
-ffmpeg
-dbus
-wl-clipboard
-xclip
-
-# GUI application dependencies
-libsecret
-jq
-libxcb
-libxkbcommon
-libxkbcommon-x11
-xcb-util-image
-xcb-util-keysyms
-xcb-util-renderutil
-xcb-util-wm
-libxkbfile
 
 # Note: CLI tools (bat, eza, fzf, ripgrep, neovim, starship, chezmoi, etc.)
 # are managed via mise in your dotfiles repository
