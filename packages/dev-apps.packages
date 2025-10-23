@@ -5,10 +5,7 @@ base-devel
 git
 pass
 zsh
-llm
 ncdu
-ncurses
-speedtest-cli
 zstd
 
 
