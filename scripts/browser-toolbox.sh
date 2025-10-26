@@ -19,7 +19,11 @@ echo "builder ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers.d/builder
 
 # Install yay (AUR helper) as non-root user
 cd /tmp
-git clone https://aur.archlinux.org/yay.git
+for i in 1 2 3; do
+  git clone https://aur.archlinux.org/yay.git && break
+  echo "Git clone attempt $i failed, retrying..."
+  sleep 2
+done
 chown -R builder:builder yay
 cd yay
 sudo -u builder makepkg -si --noconfirm
