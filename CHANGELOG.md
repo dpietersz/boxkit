@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/dpietersz/boxkit/compare/v1.1.0...v1.1.1) (2025-10-26)
+
+
+### Bug Fixes
+
+* add retry logic to git clone for yay AUR helper to handle transient network errors ([21b3b75](https://github.com/dpietersz/boxkit/commit/21b3b753bee64e2dcca6be42f4478ddf1a450565))
+
 ## [1.1.0](https://github.com/dpietersz/boxkit/compare/v1.0.0...v1.1.0) (2025-10-26)
 
 
