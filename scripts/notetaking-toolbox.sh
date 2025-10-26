@@ -32,6 +32,7 @@ pacman -S --noconfirm obsidian
 
 # Install AUR packages as non-root user
 sudo -u builder yay -S --noconfirm anytype-bin
+sudo -u builder yay -S --noconfirm legcord-bin
 
 # Clean up yay cache and build artifacts
 sudo -u builder yay -Sc --noconfirm
