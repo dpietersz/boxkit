@@ -24,3 +24,4 @@ jobs:
           echo "Release created: ${{ steps.release.outputs.release_created }}"
           echo "Release tag: ${{ steps.release.outputs.tag_name }}"
           echo "Release version: ${{ steps.release.outputs.version }}"
+# Test release-please with new PAT
