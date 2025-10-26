@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.2](https://github.com/dpietersz/boxkit/compare/v1.1.1...v1.1.2) (2025-10-26)
+
+
+### Bug Fixes
+
+* improve retry logic with proper error checking and cleanup for all AUR package installations ([4e7905b](https://github.com/dpietersz/boxkit/commit/4e7905b82a0998119ea83ea804301b4ce4cb4668))
+
 ## [1.1.1](https://github.com/dpietersz/boxkit/compare/v1.1.0...v1.1.1) (2025-10-26)
 
 
