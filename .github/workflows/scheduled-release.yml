@@ -1,0 +1,46 @@
+name: scheduled-release
+
+on:
+  schedule:
+    - cron: '0 10 * * 0'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  scheduled-release:
+    name: Create weekly package update
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Create weekly update commit
+        run: |
+          git commit --allow-empty -m "chore: weekly package update"
+
+      - name: Push to main
+        run: |
+          git push origin main
+
+      - name: Wait for release-please to create PR
+        run: sleep 30
+
+      - name: Auto-merge release PR
+        run: |
+          PR=$(gh pr list --search "chore: release" --state open --json number --jq '.[0].number')
+          if [ -n "$PR" ]; then
+            echo "Found release PR #$PR, auto-merging..."
+            gh pr merge $PR --auto --squash
+          else
+            echo "No release PR found, release-please may not have created one yet"
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
