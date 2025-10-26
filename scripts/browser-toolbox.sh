@@ -20,10 +20,17 @@ echo "builder ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers.d/builder
 # Install yay (AUR helper) as non-root user
 cd /tmp
 for i in 1 2 3; do
+  rm -rf yay 2>/dev/null || true
   git clone https://aur.archlinux.org/yay.git && break
   echo "Git clone attempt $i failed, retrying..."
   sleep 2
 done
+
+if [ ! -d "yay" ]; then
+  echo "Failed to clone yay after 3 attempts"
+  exit 1
+fi
+
 chown -R builder:builder yay
 cd yay
 sudo -u builder makepkg -si --noconfirm
@@ -31,8 +38,17 @@ cd /
 rm -rf /tmp/yay
 
 # Install browser and web-related applications
-sudo -u builder yay -S --noconfirm zen-browser-bin
-sudo -u builder yay -S --noconfirm polypane
+for i in 1 2 3; do
+  sudo -u builder yay -S --noconfirm zen-browser-bin && break
+  echo "zen-browser-bin attempt $i failed, retrying..."
+  sleep 3
+done
+
+for i in 1 2 3; do
+  sudo -u builder yay -S --noconfirm polypane && break
+  echo "polypane attempt $i failed, retrying..."
+  sleep 3
+done
 pacman -S --noconfirm qutebrowser
 pacman -S --noconfirm browserpass
 pacman -S --noconfirm chromium

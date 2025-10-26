@@ -20,10 +20,17 @@ echo "builder ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers.d/builder
 # Install yay (AUR helper) as non-root user
 cd /tmp
 for i in 1 2 3; do
+  rm -rf yay 2>/dev/null || true
   git clone https://aur.archlinux.org/yay.git && break
   echo "Git clone attempt $i failed, retrying..."
   sleep 2
 done
+
+if [ ! -d "yay" ]; then
+  echo "Failed to clone yay after 3 attempts"
+  exit 1
+fi
+
 chown -R builder:builder yay
 cd yay
 sudo -u builder makepkg -si --noconfirm
@@ -31,10 +38,23 @@ cd /
 rm -rf /tmp/yay
 
 # Install data management applications
-sudo -u builder yay -S --noconfirm storageexplorer
-sudo -u builder yay -S --noconfirm beekeeper-studio-bin
-# Install bruno-bin with error handling to avoid debug package conflicts
-sudo -u builder yay -S --noconfirm bruno-bin || true
+for i in 1 2 3; do
+  sudo -u builder yay -S --noconfirm storageexplorer && break
+  echo "storageexplorer attempt $i failed, retrying..."
+  sleep 3
+done
+
+for i in 1 2 3; do
+  sudo -u builder yay -S --noconfirm beekeeper-studio-bin && break
+  echo "beekeeper-studio-bin attempt $i failed, retrying..."
+  sleep 3
+done
+
+for i in 1 2 3; do
+  sudo -u builder yay -S --noconfirm bruno-bin && break || true
+  echo "bruno-bin attempt $i failed, retrying..."
+  sleep 3
+done
 
 # Clean up yay cache and build artifacts
 sudo -u builder yay -Sc --noconfirm

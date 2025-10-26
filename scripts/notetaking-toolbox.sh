@@ -20,10 +20,17 @@ echo "builder ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers.d/builder
 # Install yay (AUR helper) as non-root user
 cd /tmp
 for i in 1 2 3; do
+  rm -rf yay 2>/dev/null || true
   git clone https://aur.archlinux.org/yay.git && break
   echo "Git clone attempt $i failed, retrying..."
   sleep 2
 done
+
+if [ ! -d "yay" ]; then
+  echo "Failed to clone yay after 3 attempts"
+  exit 1
+fi
+
 chown -R builder:builder yay
 cd yay
 sudo -u builder makepkg -si --noconfirm
@@ -35,8 +42,17 @@ rm -rf /tmp/yay
 pacman -S --noconfirm obsidian
 
 # Install AUR packages as non-root user
-sudo -u builder yay -S --noconfirm anytype-bin
-sudo -u builder yay -S --noconfirm legcord-bin
+for i in 1 2 3; do
+  sudo -u builder yay -S --noconfirm anytype-bin && break
+  echo "anytype-bin attempt $i failed, retrying..."
+  sleep 3
+done
+
+for i in 1 2 3; do
+  sudo -u builder yay -S --noconfirm legcord-bin && break
+  echo "legcord-bin attempt $i failed, retrying..."
+  sleep 3
+done
 
 # Clean up yay cache and build artifacts
 sudo -u builder yay -Sc --noconfirm
