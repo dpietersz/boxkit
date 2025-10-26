@@ -24,7 +24,9 @@ jobs:
 
       - name: Create weekly update commit
         run: |
-          git commit --allow-empty -m "chore: weekly package update"
+          echo "# Updated $(date -u +'%Y-%m-%d %H:%M:%S UTC')" >> .github/.updated
+          git add .github/.updated
+          git commit -m "chore: weekly package update"
 
       - name: Push to main
         run: |
