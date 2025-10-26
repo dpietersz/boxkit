@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.1.0](https://github.com/dpietersz/boxkit/compare/v1.0.0...v1.1.0) (2025-10-26)
+
+
+### Features
+
+* initialize release workflow with v1.0.0 baseline ([14f898d](https://github.com/dpietersz/boxkit/commit/14f898de45ced33ffae5e9dc7dea31419f37245a))
+
+
+### Bug Fixes
+
+* update release-please config with explicit package configuration ([42df956](https://github.com/dpietersz/boxkit/commit/42df956ef2cb5c74761621682a06e037f1df26b1))
+
+
+### Miscellaneous
+
+* test release-please with updated token permissions ([171105d](https://github.com/dpietersz/boxkit/commit/171105d82256f7ad2c7b41619076fa5a2d6245e7))
+* trigger release-please workflow ([633f259](https://github.com/dpietersz/boxkit/commit/633f259c2ac863b8941b98c894d151055577346c))
+
 ## [1.4.8](https://github.com/dpietersz/boxkit/compare/v1.4.7...v1.4.8) (2025-10-23)
 
 
