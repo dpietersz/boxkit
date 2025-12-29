@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/dpietersz/boxkit/compare/v1.2.0...v1.2.1) (2025-10-26)
+
+
+### Bug Fixes
+
+* modify file instead of empty commit to trigger release-please ([a66ef0b](https://github.com/dpietersz/boxkit/commit/a66ef0bec118fc034239bd0b03365875f93d638e))
+
 ## [1.2.0](https://github.com/dpietersz/boxkit/compare/v1.1.2...v1.2.0) (2025-10-26)
 
 
