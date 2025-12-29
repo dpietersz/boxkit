@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/dpietersz/boxkit/compare/v1.2.1...v1.3.0) (2025-12-29)
+
+
+### Features
+
+* add playwright-toolbox with pre-installed browsers and host integration ([caede74](https://github.com/dpietersz/boxkit/commit/caede7466f41a1f05be139956dd593c13be7c955))
+
 ## [1.2.1](https://github.com/dpietersz/boxkit/compare/v1.2.0...v1.2.1) (2025-10-26)
 
 
