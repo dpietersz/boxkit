@@ -23,6 +23,7 @@ jobs:
           - notetaking-toolbox
           - data-toolbox
           - browser-toolbox
+          - playwright-toolbox
     steps:
       # Clone code to runner
       - name: Checkout

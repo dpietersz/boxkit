@@ -86,6 +86,18 @@ To sign your images, follow the steps below:
 
 Congratulations, you have successfully enabled container signing for all your custom images.
 
+## Available Toolboxes
+
+This repository provides several ready-to-use toolbox images:
+
+| Image | Base | Description |
+|-------|------|-------------|
+| `boxkit` | Alpine | Basic cloud-native terminal experience |
+| `browser-toolbox` | Arch | Zen Browser, Chromium, Polypane, qutebrowser |
+| `data-toolbox` | Arch | Storage Explorer, Beekeeper Studio, Bruno |
+| `notetaking-toolbox` | Arch | Obsidian, Anytype, Legcord |
+| `playwright-toolbox` | Ubuntu | Playwright with Chromium, Firefox, WebKit for E2E testing |
+
 ## Using the custom images
 
 We use the default boxkit image as an example to show you how to create a distrobox/toolbox container using a custom image.
@@ -102,7 +114,90 @@ If you use toolbox:
 
 **NOTE:**
 - You can use `chezmoi` to pull down your dotfiles and set up git sync.
-- It is recommended to use the [Ptyxis](https://flathub.org/apps/app.devsuite.Ptyxis) terminal, which provides seamless integration with various podman/distrobox/toolbx containers. 
+- It is recommended to use the [Ptyxis](https://flathub.org/apps/app.devsuite.Ptyxis) terminal, which provides seamless integration with various podman/distrobox/toolbx containers.
+
+## Playwright Toolbox
+
+The `playwright-toolbox` provides a complete Playwright testing environment with all browsers pre-installed. This is designed for Bluefin/Fedora Atomic users who want to run Playwright tests from their terminal as if Playwright was installed natively.
+
+### Installation
+
+```bash
+# Create the distrobox
+distrobox create -i ghcr.io/pietersz/playwright-toolbox -n playwright
+
+# Enter the distrobox and run the one-time setup
+distrobox enter playwright -- setup-host-integration
+```
+
+That's it! The `setup-host-integration` script exports the Playwright commands to `~/.local/bin` on your host.
+
+### Usage
+
+After setup, you can use Playwright directly from your host terminal:
+
+```bash
+# Check version
+playwright --version
+
+# Take a screenshot
+playwright screenshot https://example.com screenshot.png
+
+# Generate test code with browser recorder
+playwright codegen https://your-app.com
+
+# Run tests in a project directory
+cd your-project
+playwright test
+```
+
+### Available Commands
+
+| Command | Description |
+|---------|-------------|
+| `playwright` | General Playwright CLI (install, test, codegen, etc.) |
+| `playwright-test` | Shortcut for `playwright test` |
+| `playwright-codegen` | Shortcut for `playwright codegen` |
+
+### What's Included
+
+- **Node.js 22.x** (LTS)
+- **Playwright** (latest)
+- **Pre-installed browsers:**
+  - Chromium
+  - Firefox  
+  - WebKit (Safari engine)
+- All system dependencies for headed and headless browser testing
+
+### Custom Export Path
+
+By default, commands are exported to `~/.local/bin`. To use a different path:
+
+```bash
+distrobox enter playwright -- setup-host-integration /path/to/your/bin
+```
+
+### Troubleshooting
+
+**Commands not found after setup?**
+
+Make sure `~/.local/bin` is in your PATH. Add to your `~/.bashrc` or `~/.zshrc`:
+
+```bash
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+**Browser fails to launch?**
+
+The container automatically shares your display. If you encounter issues:
+
+```bash
+# For X11
+echo $DISPLAY  # Should show :0 or similar
+
+# For Wayland (Bluefin default)
+ls $XDG_RUNTIME_DIR/wayland-*  # Should show wayland socket
+``` 
 
 ## Custom images built with boxkit
 

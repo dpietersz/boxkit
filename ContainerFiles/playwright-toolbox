@@ -1,0 +1,15 @@
+FROM quay.io/toolbx/ubuntu-toolbox:latest
+
+LABEL com.github.containers.toolbox="true" \
+      usage="This image is meant to be used with the toolbox or distrobox command" \
+      summary="A Playwright testing Ubuntu toolbox with pre-installed browsers (Chromium, Firefox, WebKit) for end-to-end testing, designed for Bluefin Linux" \
+      maintainer="pietersz@gmail.com"
+
+# Copy the setup scripts
+COPY ../scripts/playwright-toolbox.sh /
+COPY ../scripts/distrobox-shims.sh /
+
+# Run the setup scripts
+RUN chmod +x playwright-toolbox.sh distrobox-shims.sh && /playwright-toolbox.sh
+RUN rm /playwright-toolbox.sh /distrobox-shims.sh
+
