@@ -39,8 +39,8 @@ jobs:
         run: |
           PR=$(gh pr list --search "chore: release" --state open --json number --jq '.[0].number')
           if [ -n "$PR" ]; then
-            echo "Found release PR #$PR, auto-merging..."
-            gh pr merge $PR --auto --squash
+            echo "Found release PR #$PR, merging..."
+            gh pr merge $PR --squash --delete-branch
           else
             echo "No release PR found, release-please may not have created one yet"
           fi
