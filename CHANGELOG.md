@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.3.1](https://github.com/dpietersz/boxkit/compare/v1.3.0...v1.3.1) (2025-12-30)
+
+
+### Bug Fixes
+
+* **playwright:** use 777 permissions for browsers directory ([4610761](https://github.com/dpietersz/boxkit/commit/4610761414e5ffb9ecc57a4f0c5c65e188dc8c3a))
+* use direct merge instead of auto-merge in scheduled-release ([d48a104](https://github.com/dpietersz/boxkit/commit/d48a10422291141f9753ae07d73659b4930b56f9))
+
 ## [1.3.0](https://github.com/dpietersz/boxkit/compare/v1.2.1...v1.3.0) (2025-12-29)
 
 
