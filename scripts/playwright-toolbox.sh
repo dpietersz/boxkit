@@ -33,7 +33,8 @@ npx playwright install-deps
 npx playwright install chromium firefox webkit
 
 # Set proper permissions for browsers directory
-chmod -R 755 "$PLAYWRIGHT_BROWSERS_PATH"
+# Use 777 to allow MCP server to create browser profiles
+chmod -R 777 "$PLAYWRIGHT_BROWSERS_PATH"
 
 # Create environment setup for Playwright
 cat > /etc/profile.d/playwright.sh << 'EOF'
