@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/dpietersz/boxkit/compare/v1.4.3...v1.5.0) (2026-05-21)
+
+
+### Features
+
+* **data-toolbox:** add LocalSend app ([d28e0ff](https://github.com/dpietersz/boxkit/commit/d28e0ff70ba8e30abd452b8effe3002009a4e3e2))
+
 ## [1.4.3](https://github.com/dpietersz/boxkit/compare/v1.4.2...v1.4.3) (2026-05-21)
 
 
