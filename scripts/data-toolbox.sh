@@ -56,12 +56,19 @@ for i in 1 2 3; do
   sleep 3
 done
 
+for i in 1 2 3; do
+  sudo -u builder yay -S --noconfirm localsend-bin && break || true
+  echo "localsend-bin attempt $i failed, retrying..."
+  sleep 3
+done
+
 # Declare GUI apps to export to host (consumed by distrobox init_hooks in dotfiles).
 # One <basename-of-.desktop> per line; comments with #.
 cat > /etc/distrobox-export.list <<'EOF'
 storageexplorer
 beekeeper-studio
 bruno
+localsend_app
 EOF
 
 # Clean up yay cache and build artifacts
