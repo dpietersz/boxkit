@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.1](https://github.com/dpietersz/boxkit/compare/v1.4.0...v1.4.1) (2026-05-21)
+
+
+### Bug Fixes
+
+* **browser-toolbox:** resolve teams-for-linux binary path dynamically ([8fa5eb7](https://github.com/dpietersz/boxkit/commit/8fa5eb72cee2d10b87c64293e0a248532e9c9198))
+
 ## [1.4.0](https://github.com/dpietersz/boxkit/compare/v1.3.1...v1.4.0) (2026-05-21)
 
 
