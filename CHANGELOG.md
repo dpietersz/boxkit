@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.4.2](https://github.com/dpietersz/boxkit/compare/v1.4.1...v1.4.2) (2026-05-21)
+
+
+### Bug Fixes
+
+* **browser-toolbox:** broader teams-for-linux path search, non-fatal ([efa1884](https://github.com/dpietersz/boxkit/commit/efa18844bb51799d64f709ab3e0919dc8f7f2e39))
+* **browser-toolbox:** update Wayland-flag sed for teams-for-linux 2.9.0 desktop format ([03f94a8](https://github.com/dpietersz/boxkit/commit/03f94a8669c9cb45f12f69bdabe7f363cdc4b9ae))
+
 ## [1.4.1](https://github.com/dpietersz/boxkit/compare/v1.4.0...v1.4.1) (2026-05-21)
 
 
