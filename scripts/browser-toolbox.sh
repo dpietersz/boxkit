@@ -61,10 +61,18 @@ done
 # via the xdg-desktop-portal + PipeWire pipeline (required on Bluefin's Wayland
 # session). --ozone-platform-hint=auto must be a CLI flag — the upstream config
 # explicitly does not honor it via electronCLIFlags.
+#
+# teams-for-linux-bin 2.9.0 ships:
+#   Exec=/opt/teams-for-linux/teams-for-linux --ozone-platform=x11 %U
+# Older versions shipped just:
+#   Exec=teams-for-linux %U
+# Replace the entire Exec line with our canonical Wayland-friendly form to be
+# robust against upstream changes.
+TEAMS_EXEC='Exec=/opt/teams-for-linux/teams-for-linux --ozone-platform-hint=auto --enable-features=WebRTCPipeWireCapturer,WaylandWindowDecorations --enable-webrtc-pipewire-capturer %U'
 for TEAMS_DESKTOP in /usr/share/applications/teams-for-linux.desktop \
                      /usr/share/applications/com.github.IsmaelMartinez.teams_for_linux.desktop; do
   [ -f "$TEAMS_DESKTOP" ] || continue
-  sed -i -E 's|^(Exec=.*teams-for-linux)([[:space:]]+%U)?[[:space:]]*$|\1 --ozone-platform-hint=auto --enable-features=WebRTCPipeWireCapturer,WaylandWindowDecorations --enable-webrtc-pipewire-capturer %U|' "$TEAMS_DESKTOP"
+  sed -i -E "s|^Exec=.*teams-for-linux.*$|$TEAMS_EXEC|" "$TEAMS_DESKTOP"
 done
 
 # Drop a system-wide default config that the launcher wrapper seeds into the
