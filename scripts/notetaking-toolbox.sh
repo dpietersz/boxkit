@@ -54,6 +54,14 @@ for i in 1 2 3; do
   sleep 3
 done
 
+# Declare GUI apps to export to host (consumed by distrobox init_hooks in dotfiles).
+# One <basename-of-.desktop> per line; comments with #.
+cat > /etc/distrobox-export.list <<'EOF'
+obsidian
+anytype
+legcord
+EOF
+
 # Clean up yay cache and build artifacts
 sudo -u builder yay -Sc --noconfirm
 sudo -u builder yay -Scc --noconfirm
