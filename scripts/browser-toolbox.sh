@@ -50,6 +50,56 @@ for i in 1 2 3; do
   sleep 3
 done
 
+# Install Microsoft Teams (unofficial Electron client) for meetings + screen sharing
+for i in 1 2 3; do
+  sudo -u builder yay -S --noconfirm teams-for-linux-bin && break
+  echo "teams-for-linux-bin attempt $i failed, retrying..."
+  sleep 3
+done
+
+# Patch the launcher so Teams runs natively on Wayland and can capture screens
+# via the xdg-desktop-portal + PipeWire pipeline (required on Bluefin's Wayland
+# session). --ozone-platform-hint=auto must be a CLI flag — the upstream config
+# explicitly does not honor it via electronCLIFlags.
+for TEAMS_DESKTOP in /usr/share/applications/teams-for-linux.desktop \
+                     /usr/share/applications/com.github.IsmaelMartinez.teams_for_linux.desktop; do
+  [ -f "$TEAMS_DESKTOP" ] || continue
+  sed -i -E 's|^(Exec=.*teams-for-linux)([[:space:]]+%U)?[[:space:]]*$|\1 --ozone-platform-hint=auto --enable-features=WebRTCPipeWireCapturer,WaylandWindowDecorations --enable-webrtc-pipewire-capturer %U|' "$TEAMS_DESKTOP"
+done
+
+# Drop a system-wide default config that the launcher wrapper seeds into the
+# user's $HOME on first run. screenSharing.lockInhibitionMethod=WakeLockSentinel
+# keeps the screen awake during calls without using the legacy Electron API
+# that breaks under Wayland. disableGpu=false re-enables hw accel (teams-for-
+# linux auto-disables it on Wayland, which makes screen sharing blurry).
+mkdir -p /etc/teams-for-linux
+cat > /etc/teams-for-linux/config.json.default <<'EOF'
+{
+  "disableGpu": false,
+  "screenSharing": {
+    "lockInhibitionMethod": "WakeLockSentinel"
+  },
+  "wayland": {
+    "xwaylandOptimizations": false
+  }
+}
+EOF
+
+# Wrap the binary so the default config is seeded once per user. distrobox
+# shares $HOME with the host, so this writes to the host's real config dir and
+# persists across container rebuilds. Users can edit the file freely afterwards.
+mv /usr/bin/teams-for-linux /usr/bin/teams-for-linux.real
+cat > /usr/bin/teams-for-linux <<'EOF'
+#!/bin/sh
+CFG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/teams-for-linux"
+if [ ! -f "$CFG_DIR/config.json" ] && [ -f /etc/teams-for-linux/config.json.default ]; then
+  mkdir -p "$CFG_DIR"
+  cp /etc/teams-for-linux/config.json.default "$CFG_DIR/config.json"
+fi
+exec /usr/bin/teams-for-linux.real "$@"
+EOF
+chmod +x /usr/bin/teams-for-linux
+
 # Install Helium browser manually (bypasses AUR/makepkg overlay filesystem issues)
 HELIUM_VERSION="0.12.3.1"
 cd /tmp
