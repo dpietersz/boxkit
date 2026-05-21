@@ -49,8 +49,26 @@ for i in 1 2 3; do
   echo "polypane attempt $i failed, retrying..."
   sleep 3
 done
+
+# Install Helium browser manually (bypasses AUR/makepkg overlay filesystem issues)
+HELIUM_VERSION="0.12.3.1"
+cd /tmp
+for i in 1 2 3; do
+  curl -LO "https://github.com/imputnet/helium-linux/releases/download/${HELIUM_VERSION}/helium-${HELIUM_VERSION}-x86_64_linux.tar.xz" && break
+  echo "Helium download attempt $i failed, retrying..."
+  sleep 3
+done
+tar xf "helium-${HELIUM_VERSION}-x86_64_linux.tar.xz"
+mkdir -p /opt/helium-browser-bin
+cp --no-preserve=mode,ownership -r "helium-${HELIUM_VERSION}-x86_64_linux/"* /opt/helium-browser-bin/
+chmod +x /opt/helium-browser-bin/helium*
+ln -sf /opt/helium-browser-bin/helium /usr/local/bin/helium
+cp /opt/helium-browser-bin/helium.desktop /usr/share/applications/
+rm -rf "/tmp/helium-${HELIUM_VERSION}-x86_64_linux" "/tmp/helium-${HELIUM_VERSION}-x86_64_linux.tar.xz"
+cd /
+
 pacman -S --noconfirm qutebrowser
-pacman -S --noconfirm browserpass
+pacman -S --noconfirm browserpass browserpass-chromium
 pacman -S --noconfirm chromium
 
 # Clean up yay cache and build artifacts
