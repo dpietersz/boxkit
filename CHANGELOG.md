@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.3](https://github.com/dpietersz/boxkit/compare/v1.4.2...v1.4.3) (2026-05-21)
+
+
+### Bug Fixes
+
+* **browser-toolbox:** install helium icon into hicolor theme ([88d33e1](https://github.com/dpietersz/boxkit/commit/88d33e190bc3d2bfdc48906a7f9a870a6ef2ef34))
+
 ## [1.4.2](https://github.com/dpietersz/boxkit/compare/v1.4.1...v1.4.2) (2026-05-21)
 
 
