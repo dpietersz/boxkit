@@ -1,5 +1,42 @@
 # Changelog
 
+## [1.4.0](https://github.com/dpietersz/boxkit/compare/v1.3.1...v1.4.0) (2026-05-21)
+
+
+### Features
+
+* **browser-toolbox:** add Helium browser and browserpass-chromium ([2956063](https://github.com/dpietersz/boxkit/commit/295606348d253894f9cfa09df32d7d1bd45aa2b8))
+* **browser-toolbox:** add Microsoft Teams with Wayland screen sharing ([d7da08f](https://github.com/dpietersz/boxkit/commit/d7da08f6aee9d4d7894f4f84f724e288fb6bec11))
+* **toolbox:** declare GUI apps to export via /etc/distrobox-export.list ([d39bf78](https://github.com/dpietersz/boxkit/commit/d39bf788e43ab78defe9147e1751aba2e77b2b01))
+
+
+### Documentation
+
+* expand AGENTS.md with build/test/release guidance ([80fddb4](https://github.com/dpietersz/boxkit/commit/80fddb4b808b9f1d68735166eb10bf6f12d267e7))
+
+
+### Miscellaneous
+
+* weekly package update ([fb33d01](https://github.com/dpietersz/boxkit/commit/fb33d01c781d832bd4fdf1fbd09a280603b11201))
+* weekly package update ([dde0259](https://github.com/dpietersz/boxkit/commit/dde0259d201b9ae0cc087168f1a50d5fafee61e2))
+* weekly package update ([5e36bee](https://github.com/dpietersz/boxkit/commit/5e36beee7cdfe3a582b8f19ef878734e24bdd3d7))
+* weekly package update ([a52f15d](https://github.com/dpietersz/boxkit/commit/a52f15d9255bbd2b8be3c7e41bd75073292dce26))
+* weekly package update ([cb49931](https://github.com/dpietersz/boxkit/commit/cb4993100ce6b2c3be51ec90e475744dae7f04d1))
+* weekly package update ([7185f8a](https://github.com/dpietersz/boxkit/commit/7185f8afa5c2753a832ea90c2c6bf63fe2e67b73))
+* weekly package update ([723c1f5](https://github.com/dpietersz/boxkit/commit/723c1f587570fbc9061f654f485f72821cd2e8c7))
+* weekly package update ([9018539](https://github.com/dpietersz/boxkit/commit/90185395a749ef14d5ab641041f623751448e42c))
+* weekly package update ([14b24d4](https://github.com/dpietersz/boxkit/commit/14b24d44c99a1f50746e137bf78100532abbe361))
+* weekly package update ([ea8d55c](https://github.com/dpietersz/boxkit/commit/ea8d55cf5ee5d8c93feb667cae8e60a1f345ed0d))
+* weekly package update ([9a8a67f](https://github.com/dpietersz/boxkit/commit/9a8a67f48828133fdd4cf4a3880df99bf6a572ce))
+* weekly package update ([d7dd4c2](https://github.com/dpietersz/boxkit/commit/d7dd4c25307df48be7552808ea0e66ea8ae518ec))
+* weekly package update ([4623a4f](https://github.com/dpietersz/boxkit/commit/4623a4f588b8342f20e01b3da230792ed2911433))
+* weekly package update ([5657802](https://github.com/dpietersz/boxkit/commit/56578023f06649f0e0993147f0ca587fce2f3f5c))
+* weekly package update ([2c9fdd0](https://github.com/dpietersz/boxkit/commit/2c9fdd0a0d39684cd253cf507fadc280518de667))
+* weekly package update ([cea3a46](https://github.com/dpietersz/boxkit/commit/cea3a468505a2b6b8f42c8e42b3c0bcabeaa9ce1))
+* weekly package update ([4b391a2](https://github.com/dpietersz/boxkit/commit/4b391a28251b91a821e81187ff42c9beed73092f))
+* weekly package update ([0defd62](https://github.com/dpietersz/boxkit/commit/0defd62afded3884edb36c124c0ed6ed5eaf7ee2))
+* weekly package update ([1096f82](https://github.com/dpietersz/boxkit/commit/1096f8261064f27d7bc6b6f1023f507eec0caec1))
+
 ## [1.3.1](https://github.com/dpietersz/boxkit/compare/v1.3.0...v1.3.1) (2025-12-30)
 
 
