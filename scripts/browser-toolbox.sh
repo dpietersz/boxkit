@@ -89,17 +89,39 @@ EOF
 # shares $HOME with the host, so this writes to the host's real config dir and
 # persists across container rebuilds. Users can edit the file freely afterwards.
 #
-# The AUR teams-for-linux-bin PKGBUILD does not consistently install at
-# /usr/bin/teams-for-linux across versions (sometimes /opt, sometimes a symlink
-# elsewhere), so we resolve the binary path dynamically rather than hardcoding.
-TEAMS_BIN="$(command -v teams-for-linux || true)"
+# The AUR teams-for-linux-bin PKGBUILD doesn't install at a stable path across
+# versions: 2.9.0 ships under /usr/lib/teams-for-linux/, older revisions used
+# /opt or /usr/bin. Search the common locations and fall back to pacman's
+# file list. If nothing is found we skip the wrapper rather than failing the
+# build — Teams still works without auto-seeded config, the user just has to
+# copy /etc/teams-for-linux/config.json.default themselves.
+TEAMS_BIN=""
+for candidate in /usr/bin/teams-for-linux \
+                 /usr/local/bin/teams-for-linux \
+                 /opt/teams-for-linux/teams-for-linux \
+                 /usr/lib/teams-for-linux/teams-for-linux \
+                 /usr/share/teams-for-linux/teams-for-linux; do
+  if [ -x "$candidate" ] && [ ! -d "$candidate" ]; then
+    TEAMS_BIN="$candidate"
+    break
+  fi
+done
 if [ -z "$TEAMS_BIN" ]; then
-  echo "ERROR: teams-for-linux binary not on PATH after install; cannot wrap" >&2
-  exit 1
+  TEAMS_BIN=$(pacman -Ql teams-for-linux-bin 2>/dev/null \
+    | awk '$2 ~ /\/teams-for-linux$/ {print $2}' \
+    | while read -r p; do
+        if [ -x "$p" ] && [ ! -d "$p" ]; then echo "$p"; break; fi
+      done)
 fi
-TEAMS_REAL="${TEAMS_BIN}.real"
-mv "$TEAMS_BIN" "$TEAMS_REAL"
-cat > "$TEAMS_BIN" <<EOF
+
+if [ -z "$TEAMS_BIN" ]; then
+  echo "WARN: teams-for-linux binary not found in known paths or pacman file list;"
+  echo "      skipping wrapper. Teams will still launch, but the default config"
+  echo "      won't be auto-seeded. List user can inspect with: pacman -Ql teams-for-linux-bin"
+else
+  TEAMS_REAL="${TEAMS_BIN}.real"
+  mv "$TEAMS_BIN" "$TEAMS_REAL"
+  cat > "$TEAMS_BIN" <<EOF
 #!/bin/sh
 CFG_DIR="\${XDG_CONFIG_HOME:-\$HOME/.config}/teams-for-linux"
 if [ ! -f "\$CFG_DIR/config.json" ] && [ -f /etc/teams-for-linux/config.json.default ]; then
@@ -108,7 +130,8 @@ if [ ! -f "\$CFG_DIR/config.json" ] && [ -f /etc/teams-for-linux/config.json.def
 fi
 exec $TEAMS_REAL "\$@"
 EOF
-chmod +x "$TEAMS_BIN"
+  chmod +x "$TEAMS_BIN"
+fi
 
 # Install Helium browser manually (bypasses AUR/makepkg overlay filesystem issues)
 HELIUM_VERSION="0.12.3.1"
