@@ -88,17 +88,27 @@ EOF
 # Wrap the binary so the default config is seeded once per user. distrobox
 # shares $HOME with the host, so this writes to the host's real config dir and
 # persists across container rebuilds. Users can edit the file freely afterwards.
-mv /usr/bin/teams-for-linux /usr/bin/teams-for-linux.real
-cat > /usr/bin/teams-for-linux <<'EOF'
-#!/bin/sh
-CFG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/teams-for-linux"
-if [ ! -f "$CFG_DIR/config.json" ] && [ -f /etc/teams-for-linux/config.json.default ]; then
-  mkdir -p "$CFG_DIR"
-  cp /etc/teams-for-linux/config.json.default "$CFG_DIR/config.json"
+#
+# The AUR teams-for-linux-bin PKGBUILD does not consistently install at
+# /usr/bin/teams-for-linux across versions (sometimes /opt, sometimes a symlink
+# elsewhere), so we resolve the binary path dynamically rather than hardcoding.
+TEAMS_BIN="$(command -v teams-for-linux || true)"
+if [ -z "$TEAMS_BIN" ]; then
+  echo "ERROR: teams-for-linux binary not on PATH after install; cannot wrap" >&2
+  exit 1
 fi
-exec /usr/bin/teams-for-linux.real "$@"
+TEAMS_REAL="${TEAMS_BIN}.real"
+mv "$TEAMS_BIN" "$TEAMS_REAL"
+cat > "$TEAMS_BIN" <<EOF
+#!/bin/sh
+CFG_DIR="\${XDG_CONFIG_HOME:-\$HOME/.config}/teams-for-linux"
+if [ ! -f "\$CFG_DIR/config.json" ] && [ -f /etc/teams-for-linux/config.json.default ]; then
+  mkdir -p "\$CFG_DIR"
+  cp /etc/teams-for-linux/config.json.default "\$CFG_DIR/config.json"
+fi
+exec $TEAMS_REAL "\$@"
 EOF
-chmod +x /usr/bin/teams-for-linux
+chmod +x "$TEAMS_BIN"
 
 # Install Helium browser manually (bypasses AUR/makepkg overlay filesystem issues)
 HELIUM_VERSION="0.12.3.1"
