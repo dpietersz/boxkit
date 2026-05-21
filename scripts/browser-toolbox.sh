@@ -155,6 +155,17 @@ cp --no-preserve=mode,ownership -r "helium-${HELIUM_VERSION}-x86_64_linux/"* /op
 chmod +x /opt/helium-browser-bin/helium*
 ln -sf /opt/helium-browser-bin/helium /usr/local/bin/helium
 cp /opt/helium-browser-bin/helium.desktop /usr/share/applications/
+
+# Helium's tarball ships its launcher icon as /opt/helium-browser-bin/product_logo_256.png
+# and the .desktop references it via "Icon=helium", which won't resolve through the
+# XDG icon theme lookup unless we install it into hicolor with a matching basename.
+# Without this, distrobox-export copies the .desktop to the host but the launcher
+# shows a generic fallback icon.
+if [ -f /opt/helium-browser-bin/product_logo_256.png ]; then
+  mkdir -p /usr/share/icons/hicolor/256x256/apps
+  cp /opt/helium-browser-bin/product_logo_256.png /usr/share/icons/hicolor/256x256/apps/helium.png
+fi
+
 rm -rf "/tmp/helium-${HELIUM_VERSION}-x86_64_linux" "/tmp/helium-${HELIUM_VERSION}-x86_64_linux.tar.xz"
 cd /
 
