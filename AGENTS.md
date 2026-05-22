@@ -4,23 +4,20 @@
 
 boxkit is a framework for building custom toolbox and distrobox container images using GitHub Actions. The codebase uses ContainerFiles (Dockerfile syntax), shell scripts, and GitHub workflows to build and publish OCI-compliant container images to GHCR.
 
-**Current Images**: boxkit, notetaking-toolbox, data-toolbox, browser-toolbox, playwright-toolbox
+**Current Images**: udx-toolbox, playwright-toolbox
 
 ## Directory Structure
 
 ```
 boxkit/
 ├── ContainerFiles/       # Container definitions (Dockerfile format)
-│   ├── boxkit            # Alpine-based CLI toolbox
-│   ├── browser-toolbox   # Arch-based browser tools
-│   ├── data-toolbox      # Arch-based data management
-│   ├── notetaking-toolbox # Arch-based notetaking
+│   ├── udx-toolbox       # Arch-based unified daily-driver GUI apps
 │   └── playwright-toolbox # Ubuntu-based E2E testing
 ├── scripts/              # Shell setup scripts (run during build)
 │   ├── distrobox-shims.sh # Common: symlinks for host commands
+│   ├── decommission-ghcr.sh # One-shot: wipe legacy GHCR packages
 │   └── {image-name}.sh   # Image-specific setup logic
 ├── packages/             # Package list files
-│   ├── boxkit.packages   # Alpine packages (apk)
 │   └── toolbox.packages  # Arch packages (pacman)
 └── .github/workflows/    # CI/CD pipelines
 ```

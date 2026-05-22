@@ -19,10 +19,7 @@ jobs:
       fail-fast: false
       matrix:
         containerfile:
-          - boxkit
-          - notetaking-toolbox
-          - data-toolbox
-          - browser-toolbox
+          - udx-toolbox
           - playwright-toolbox
     steps:
       # Clone code to runner
