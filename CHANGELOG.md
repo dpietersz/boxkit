@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.3](https://github.com/dpietersz/boxkit/compare/v2.0.2...v2.0.3) (2026-05-22)
+
+
+### Bug Fixes
+
+* **udx-toolbox:** inject DBUS + XDG_CURRENT_DESKTOP env vars into GUI .desktop files ([e304ce0](https://github.com/dpietersz/boxkit/commit/e304ce029b2f5387c7ff577393cf56f88f18c938))
+
 ## [2.0.2](https://github.com/dpietersz/boxkit/compare/v2.0.1...v2.0.2) (2026-05-22)
 
 
