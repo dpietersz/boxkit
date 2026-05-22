@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.0.1](https://github.com/dpietersz/boxkit/compare/v2.0.0...v2.0.1) (2026-05-22)
+
+
+### Bug Fixes
+
+* **udx-toolbox:** patcher inserts wayland flags before field codes ([#27](https://github.com/dpietersz/boxkit/issues/27)) ([ac71455](https://github.com/dpietersz/boxkit/commit/ac7145558a50d72600c4d5071272929c4cf30b8f))
+
+
+### Miscellaneous
+
+* fix readme cosign verify example ([#25](https://github.com/dpietersz/boxkit/issues/25)) ([1fbb5bd](https://github.com/dpietersz/boxkit/commit/1fbb5bdff23ca4c52f84cd7301f92302da27a556))
+
 ## [2.0.0](https://github.com/dpietersz/boxkit/compare/v1.5.0...v2.0.0) (2026-05-22)
 
 
