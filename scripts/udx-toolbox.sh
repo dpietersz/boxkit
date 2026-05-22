@@ -105,9 +105,32 @@ apply_wayland_flags() {
     return 0
   fi
 
-  # Insert flags after the executable token of the main Exec= line.
-  # Captures: \1 = executable path (no spaces); \2 = remainder (args, %U, etc.)
-  sed -i -E "s|^Exec=([^[:space:]]+)([[:space:]].*)?\$|Exec=\1 ${WAYLAND_FLAGS}\2|" "$desktop_path"
+  # Insert flags as the LAST positional args to the actual binary, i.e. just
+  # before any XDG field code (%f %F %u %U %c %i %k), or appended to the end
+  # if no field code is present. This is wrapper-agnostic: works for direct
+  # binary Exec lines AND for env/sh/bash-prefixed Exec lines where the first
+  # token is a wrapper, not the binary we want to flag.
+  #
+  # Wrong pattern (what we used to do): treat the first whitespace-separated
+  # token as the binary and insert flags right after it. That broke
+  # `Exec=env VAR=val realbinary` because `env` got the flags instead of
+  # `realbinary`, and env doesn't understand --ozone-platform-hint.
+  if grep -qE "^Exec=.*[[:space:]]+%[fFuUcik]" "$desktop_path"; then
+    # Field code present — insert flags right before it
+    sed -i -E "s|^(Exec=.*[^[:space:]])([[:space:]]+%[fFuUcik])|\1 ${WAYLAND_FLAGS}\2|" "$desktop_path"
+  else
+    # No field code — append flags at end of Exec line
+    sed -i -E "s|^(Exec=.*[^[:space:]])[[:space:]]*\$|\1 ${WAYLAND_FLAGS}|" "$desktop_path"
+  fi
+
+  # Post-patch sanity: the first token after Exec= must NOT be one of our
+  # flags. If it is, the sed didn't match anything sensible and the entry
+  # is corrupted — fail loudly so the build halts.
+  first_token=$(awk -F= '/^Exec=/{print $2; exit}' "$desktop_path" | awk '{print $1}')
+  case "$first_token" in
+    --*) echo "ASSERT FAIL: patched Exec= starts with a flag ($first_token) in $desktop_path"; return 1 ;;
+  esac
+
   echo "INFO: patched $desktop_path"
 }
 
