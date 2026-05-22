@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.2](https://github.com/dpietersz/boxkit/compare/v2.0.1...v2.0.2) (2026-05-22)
+
+
+### Bug Fixes
+
+* **udx-toolbox:** storageexplorer host-export by matching dx-export grep case ([#28](https://github.com/dpietersz/boxkit/issues/28)) ([e42e019](https://github.com/dpietersz/boxkit/commit/e42e019bb299fe065bb9235ac9a6d7fc1e7d3c8f))
+
 ## [2.0.1](https://github.com/dpietersz/boxkit/compare/v2.0.0...v2.0.1) (2026-05-22)
 
 
