@@ -76,6 +76,27 @@ yay_install bruno-bin
 yay_install localsend-bin
 yay_install ferdium-bin
 
+# ─── storageexplorer host-export workaround ─────────────────────────────────
+# distrobox-export --app <name> uses a CASE-SENSITIVE grep against Exec= and
+# Name= in each .desktop file to find the entry. The storageexplorer AUR
+# package installs:
+#   Exec=env DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1 StorageExplorer ...
+#   Name=Microsoft Azure Storage Explorer
+# Neither line contains the literal "storageexplorer" (lowercase), so
+# `distrobox-export --app storageexplorer` — what dotfiles' init_hook calls
+# based on the .desktop *filename* — fails with "cannot find any desktop
+# files". The other 7 apps work because their binary basename is already
+# lowercase and appears in Exec=.
+#
+# Fix: add a lowercase symlink so `env ... storageexplorer` resolves to the
+# real binary, then rewrite the Exec= line below to use that lowercase
+# binary. The .desktop now contains the literal "storageexplorer", matching
+# distrobox-export's grep. Functionality is unchanged.
+ln -sf /opt/StorageExplorer/StorageExplorer /usr/bin/storageexplorer
+# Only rewrite the binary token on the Exec= line — Path= and Icon= still
+# need the real /opt/StorageExplorer (mixed case) filesystem path.
+sed -i -E '/^Exec=/ s/( )StorageExplorer( |$)/\1storageexplorer\2/' /usr/share/applications/storageexplorer.desktop
+
 # ─── Wayland flag patcher (preemptive) ──────────────────────────────────────
 # Applied to every Electron app's primary .desktop Exec= line so the apps
 # run as Wayland-native windows on niri (no XWayland fallback) and can use
