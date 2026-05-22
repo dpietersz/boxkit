@@ -1,0 +1,15 @@
+FROM quay.io/toolbx/arch-toolbox:latest
+
+LABEL com.github.containers.toolbox="true" \
+      usage="This image is meant to be used with the toolbox or distrobox command" \
+      summary="Unified daily-driver Arch toolbox: Storage Explorer, Obsidian, Anytype, Legcord, Polypane, Bruno, LocalSend, Ferdium — Wayland/niri ready, NVIDIA-compatible via distrobox --nvidia" \
+      maintainer="pietersz@gmail.com"
+
+# Copy the setup scripts and package list
+COPY ../scripts/udx-toolbox.sh /
+COPY ../scripts/distrobox-shims.sh /
+COPY ../packages/toolbox.packages /
+
+# Run the setup scripts
+RUN chmod +x udx-toolbox.sh distrobox-shims.sh && /udx-toolbox.sh
+RUN rm /udx-toolbox.sh /distrobox-shims.sh /toolbox.packages

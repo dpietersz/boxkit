@@ -88,15 +88,12 @@ Congratulations, you have successfully enabled container signing for all your cu
 
 ## Available Toolboxes
 
-This repository provides several ready-to-use toolbox images:
+This repository builds two ready-to-use toolbox images. See `QUICK_START.md` for usage, NVIDIA setup, and the `/etc/distrobox-export.list` contract.
 
 | Image | Base | Description |
 |-------|------|-------------|
-| `boxkit` | Alpine | Basic cloud-native terminal experience |
-| `browser-toolbox` | Arch | Zen Browser, Chromium, Polypane, qutebrowser |
-| `data-toolbox` | Arch | Storage Explorer, Beekeeper Studio, Bruno |
-| `notetaking-toolbox` | Arch | Obsidian, Anytype, Legcord |
-| `playwright-toolbox` | Ubuntu | Playwright with Chromium, Firefox, WebKit for E2E testing |
+| `udx-toolbox` | Arch | Daily-driver GUI apps: Storage Explorer, Obsidian, Anytype, Legcord, Polypane, Bruno, LocalSend, Ferdium. Wayland/niri-ready, NVIDIA-compatible via `distrobox create --nvidia`. |
+| `playwright-toolbox` | Ubuntu | Playwright with Chromium, Firefox, WebKit for E2E testing. |
 
 ## Using the custom images
 

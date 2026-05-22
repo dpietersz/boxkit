@@ -1,136 +1,205 @@
-# Quick Start Guide - Daily Driver Toolboxes
+# Quick Start
 
-## What Was Created
+This repo builds two container images for use with `distrobox` on Bluefin + niri:
 
-Two custom distrobox/toolbox images for your daily development workflow:
+| Image | Base | Purpose |
+|-------|------|---------|
+| `udx-toolbox` | Arch (toolbx) | Daily-driver GUI apps: Storage Explorer, Obsidian, Anytype, Legcord, Polypane, Bruno, LocalSend, Ferdium |
+| `playwright-toolbox` | Ubuntu (toolbx) | Playwright E2E testing with Chromium / Firefox / WebKit |
 
-### 1. **daily-driver-fedora** 🔴
-Fedora-based container with:
-- **GUI Apps**: Zed, Zen Browser, Vivaldi, Qutebrowser, Beekeeper Studio, Cursor, Bruno, Browserpass
-- **Essential Tools**: git, pass, zsh, ffmpeg, build tools
-- **CLI Tools**: Managed via chezmoi + mise from your dotfiles
+Both are published to GHCR at `ghcr.io/<your-gh-user>/<image>:latest`.
 
-### 2. **daily-driver-arch** 🔵
-Arch-based container with:
-- **GUI Apps**: Obsidian, AnyType, Polypane, Microsoft Storage Explorer (from AUR)
-- **Essential Tools**: git, pass, zsh, ffmpeg, build tools
-- **CLI Tools**: Managed via chezmoi + mise from your dotfiles
+---
 
-## Building the Images
+## Prerequisites
 
-### Option 1: GitHub Actions (Automatic)
-Push your changes to GitHub, and the workflow will automatically build and push images to GHCR.
+- Bluefin (or any uBlue / Fedora Atomic variant) on the host
+- `distrobox` ≥ 1.7
+- `podman` (default on Bluefin)
+- niri or any Wayland compositor (XWayland fallback also works, but the apps are tuned for native Wayland)
+- For the NVIDIA laptop: a working host NVIDIA driver. `nvidia-smi` must succeed on the host before distrobox can pass it through.
 
-### Option 2: Local Build (Manual)
-```bash
-# Build Fedora image
-podman build -f ContainerFiles/daily-driver-fedora -t daily-driver-fedora:latest
+---
 
-# Build Arch image
-podman build -f ContainerFiles/daily-driver-arch -t daily-driver-arch:latest
-```
+## Creating udx-toolbox
 
-## Using the Containers
-
-### Create Fedora container:
-```bash
-distrobox create -i daily-driver-fedora:latest -n daily-driver-fedora
-distrobox enter daily-driver-fedora
-```
-
-### Create Arch container:
-```bash
-distrobox create -i daily-driver-arch:latest -n daily-driver-arch
-distrobox enter daily-driver-arch
-```
-
-## Essential Tools (Pre-installed in Containers)
-
-| Tool | Purpose |
-|------|---------|
-| `git` | Version control |
-| `pass` | Password manager |
-| `zsh` | Shell |
-| `ffmpeg` | Video/audio processing |
-| Build tools | gcc, make, pkg-config (for compiling from source) |
-
-## CLI Tools (Managed via Chezmoi + Mise)
-
-Your dotfiles repository manages all other CLI tools via mise:
-- age, bat, btop, chezmoi, doggo, fd, fzf, lazydocker, lazygit, eza, neovim, node, ripgrep, starship, yazi, zellij, zoxide, opencode, python, uv, and more
-
-## Setting Up Your Dotfiles
-
-After creating a container, apply your dotfiles to set up all CLI tools:
+### On the T580 (Intel graphics)
 
 ```bash
-# Enter the container
-distrobox enter daily-driver-fedora
-
-# Clone and apply your dotfiles
-git clone https://github.com/dpietersz/dotfiles.git ~/.local/share/chezmoi
-chezmoi apply
-
-# Verify tools are installed
-python --version
-node --version
-neovim --version
+distrobox create -i ghcr.io/<your-gh-user>/udx-toolbox:latest -n udx
+distrobox enter udx
 ```
 
-This will install all tools configured in your mise `config.toml` with their pinned versions.
+That's it. Intel graphics work out of the box — no host-side flags required.
 
-## Customization
+### On the P14s Gen 5 (NVIDIA RTX)
 
-### Add more system packages to Fedora:
-Edit `packages/daily-driver-fedora.packages` and add package names (one per line).
+```bash
+distrobox create -i ghcr.io/<your-gh-user>/udx-toolbox:latest -n udx --nvidia
+distrobox enter udx
+```
 
-### Add more system packages to Arch:
-Edit `packages/daily-driver-arch.packages` and add package names (one per line).
+The `--nvidia` flag tells distrobox to mount the host's NVIDIA driver libraries (`libcuda`, `libGL`, `libEGL`, `libnvidia-*`) into the container at create time. **The image itself is identical on both laptops.** All the NVIDIA work happens host-side.
 
-### Add more GUI apps to Arch:
-Edit `scripts/daily-driver-arch.sh` and add `yay -S --noconfirm <package-name>` lines.
+Verify NVIDIA passthrough is live from inside the container:
 
-### Add more GUI apps to Fedora:
-Edit `scripts/daily-driver-fedora.sh` and add COPR repos or official repos as needed.
+```bash
+# Inside the container
+nvidia-smi               # should list the RTX card
+glxinfo -B | grep -i renderer   # should mention NVIDIA, not "llvmpipe"
+```
 
-### Manage CLI tool versions:
-Edit your dotfiles repository's mise `config.toml` to add/update tool versions. Then run `chezmoi apply` in the container.
+If `nvidia-smi` doesn't work inside the container but works on the host:
 
-## File Locations
+1. Confirm the host driver is loaded: `lsmod | grep nvidia` on the host.
+2. Re-create the container with `--nvidia`: `distrobox rm udx && distrobox create -i ... -n udx --nvidia`. The flag cannot be added to an existing container.
+3. Check distrobox version: `distrobox --version` — `--nvidia` requires ≥ 1.5.
 
-- **Fedora ContainerFile**: `ContainerFiles/daily-driver-fedora`
-- **Arch ContainerFile**: `ContainerFiles/daily-driver-arch`
-- **Fedora packages**: `packages/daily-driver-fedora.packages`
-- **Arch packages**: `packages/daily-driver-arch.packages`
-- **Fedora setup script**: `scripts/daily-driver-fedora.sh`
-- **Arch setup script**: `scripts/daily-driver-arch.sh`
-- **GitHub workflow**: `.github/workflows/build-boxkit.yml`
-- **Your dotfiles**: https://github.com/dpietersz/dotfiles (manages CLI tools via mise)
+### What we explicitly do NOT do for NVIDIA
 
-## Next Steps
+We do not bake NVIDIA-specific Electron flags (VA-API video decode etc.) into the image. Reason: the third-party NVIDIA VA-API shim (`libva-nvidia-driver`) is brittle and the apps in udx-toolbox don't decode meaningful video — the practical benefit is near zero and the crash risk on the P14s is non-zero. NVIDIA OpenGL/Vulkan compositing already works through the driver-lib passthrough. If you ever want hardware video decode for a specific app later, patch its `.desktop` file inside the container; don't change the image.
 
-1. **Customize**: Edit the package lists and scripts to add/remove tools as needed
-2. **Build**: Run `podman build` locally or push to GitHub for automatic builds
-3. **Test**: Create containers and verify all tools work as expected
-4. **Deploy**: Use the images with distrobox/toolbox on your system
+---
+
+## Creating playwright-toolbox
+
+```bash
+distrobox create -i ghcr.io/<your-gh-user>/playwright-toolbox:latest -n playwright
+distrobox enter playwright -- setup-host-integration
+```
+
+The `setup-host-integration` script exports `playwright`, `playwright-test`, and `playwright-codegen` to `~/.local/bin` on the host. After that you can run `playwright test` from any project on the host as if Playwright were installed natively.
+
+NVIDIA is not relevant here — Playwright drives browsers headlessly.
+
+---
+
+## `/etc/distrobox-export.list` — how GUI apps reach the host menu
+
+This list is the contract between this repo and your dotfiles' distrobox `init_hooks`. Once you understand it, the rest of the GUI integration is trivial. Once it drifts, apps silently disappear from your host menu — which has happened before, so this chapter exists.
+
+### What it is
+
+`/etc/distrobox-export.list` is a plain-text file inside the udx-toolbox container. Each non-empty, non-comment line is a `.desktop` file basename (no `.desktop` suffix, no path) that lives at `/usr/share/applications/<name>.desktop` inside the container.
+
+Your dotfiles' distrobox init_hook reads this file when you enter the container (or shortly after creation) and runs roughly:
+
+```bash
+while IFS= read -r app; do
+  case "$app" in ''|\#*) continue ;; esac
+  distrobox-export --app "$app"
+done < /etc/distrobox-export.list
+```
+
+`distrobox-export --app <name>` copies the container's `.desktop` to `~/.local/share/applications/` on the host with a tweaked `Exec=` line that calls `distrobox-enter -n udx -- <original-exec>`. So clicking the app from your host menu transparently runs it inside udx-toolbox.
+
+### How udx-toolbox guarantees the list is correct
+
+At build time, `scripts/udx-toolbox.sh` does **not** hard-code basenames. For each installed application package, it asks `pacman -Ql <pkg>` for the real `/usr/share/applications/*.desktop` paths it installed, strips them to basenames, and writes those into the export list.
+
+It then **asserts** every entry resolves — every basename in the list must correspond to an actual file at `/usr/share/applications/<name>.desktop`. If any miss, the build fails. This is the part that prevents the "silently missing apps" problem.
+
+You can inspect the live list inside a running container:
+
+```bash
+distrobox enter udx -- cat /etc/distrobox-export.list
+```
+
+### When to edit it (and how)
+
+Don't edit `/etc/distrobox-export.list` inside the container — it gets wiped on every image rebuild. To add or remove an app:
+
+1. Edit the `EXPORTED_PACKAGES` line in `scripts/udx-toolbox.sh`.
+2. Also edit the install step (add or remove the corresponding `yay_install` / `pacman -S` call).
+3. Rebuild the image (locally with `podman build`, or push and let CI build).
+4. Re-create or re-enter the container. Run your dotfiles' init_hook (or `distrobox-export --app <name>` manually).
+
+### Why this is fragile in distrobox land (and we work around it)
+
+`.desktop` basenames are upstream-controlled and vary unpredictably:
+
+- Sometimes they match the binary (`obsidian.desktop` → exec `obsidian`).
+- Sometimes they use a reverse-DNS ID (`org.qutebrowser.qutebrowser.desktop`).
+- Sometimes capitalization is inconsistent (`Polypane.desktop` vs `polypane`).
+- Sometimes a package ships several `.desktop` files (a main entry plus URL handlers).
+
+The discover-then-assert pattern in the build script handles all of these — whatever the upstream package installs, that's what the list contains. No human guessing.
+
+---
 
 ## Troubleshooting
 
-### Container won't start
-- Ensure podman/docker is running
-- Check image exists: `podman images | grep daily-driver`
+### Apps don't appear on the host menu
 
-### Missing packages
-- Add to the appropriate `.packages` file
-- Rebuild the image
+1. Confirm the list is correct: `distrobox enter udx -- cat /etc/distrobox-export.list`
+2. Confirm your dotfiles' init_hook ran. Run it manually if needed.
+3. Confirm host export landed: `ls ~/.local/share/applications/ | grep udx` (distrobox-export adds a suffix to mark container-exported entries).
+4. Restart your host's app menu / launcher (niri's app picker re-scans on launch).
 
-### Version conflicts
-- Update `.mise.toml` with desired versions
-- Rebuild the image
+### Apps launch but as XWayland instead of native Wayland
 
-## Documentation
+The `udx-toolbox.sh` script preemptively patches every Electron app's `.desktop` Exec line with `--ozone-platform-hint=auto` and PipeWire flags. Verify the patch is in place:
 
-For detailed information, see:
-- `DAILY_DRIVER_SETUP.md` - Complete setup documentation
-- `README.md` - Original boxkit documentation
+```bash
+distrobox enter udx -- grep ozone /usr/share/applications/<app>.desktop
+```
 
+If the line is missing, the build script's idempotency check skipped it (probably because the app was already patched in a prior run). Inspect manually and add the flags if needed.
+
+To confirm an app is running Wayland-native on the host, click its window and run on the host:
+
+```bash
+xprop WM_CLASS   # then click the window
+```
+
+A pure-Wayland window often has no XWayland markers. An easier signal: `wayland-info | grep <app>` should list the client.
+
+### NVIDIA passthrough not working
+
+See the "On the P14s Gen 5" section above — `nvidia-smi` inside the container is the canonical test.
+
+### Screen sharing in Ferdium / Legcord shows a black rectangle
+
+Wayland screen capture requires the host's `xdg-desktop-portal` and `xdg-desktop-portal-gnome` (or `-wlr` on niri-like compositors) to be running. This is a host concern, not the image. Verify on the host:
+
+```bash
+systemctl --user status xdg-desktop-portal
+```
+
+---
+
+## Updating
+
+When new image versions ship:
+
+```bash
+distrobox stop udx
+podman pull ghcr.io/<your-gh-user>/udx-toolbox:latest
+distrobox rm udx
+distrobox create -i ghcr.io/<your-gh-user>/udx-toolbox:latest -n udx   # add --nvidia on P14s
+```
+
+Your `$HOME` is shared, so all app config persists across recreates.
+
+---
+
+## File map
+
+```
+boxkit/
+├── ContainerFiles/
+│   ├── udx-toolbox
+│   └── playwright-toolbox
+├── scripts/
+│   ├── udx-toolbox.sh
+│   ├── playwright-toolbox.sh
+│   ├── distrobox-shims.sh
+│   └── decommission-ghcr.sh
+├── packages/
+│   └── toolbox.packages
+└── .github/workflows/
+    ├── build-containers.yml
+    ├── cleanup-ghcr.yml
+    ├── release-please.yml
+    └── scheduled-release.yml
+```

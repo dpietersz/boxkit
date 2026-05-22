@@ -1,5 +1,13 @@
 name: cleanup-ghcr
 
+# Retention policy:
+#   - udx-toolbox, playwright-toolbox: keep the 3 most recent versions
+#     (which includes the one tagged `latest`). Older versions are pruned.
+#   - Decommissioned images (boxkit, browser-toolbox, data-toolbox,
+#     notetaking-toolbox) are NOT pruned here — they are wiped entirely
+#     out-of-band via scripts/decommission-ghcr.sh after the udx-toolbox
+#     migration ships. Once wiped, this workflow no longer touches them.
+
 on:
   schedule:
     - cron: "0 2 * * 0"  # Weekly on Sunday at 2 AM UTC
@@ -11,35 +19,18 @@ jobs:
     permissions:
       packages: write
     steps:
-      - name: Delete old boxkit images
+      - name: Prune old udx-toolbox versions (keep 3)
         uses: actions/delete-package-versions@v4
         with:
-          package-name: 'boxkit'
+          package-name: 'udx-toolbox'
           package-type: 'container'
-          min-versions-to-keep: 5
+          min-versions-to-keep: 3
           delete-only-untagged-versions: 'false'
 
-      - name: Delete old notetaking-toolbox images
+      - name: Prune old playwright-toolbox versions (keep 3)
         uses: actions/delete-package-versions@v4
         with:
-          package-name: 'notetaking-toolbox'
+          package-name: 'playwright-toolbox'
           package-type: 'container'
-          min-versions-to-keep: 5
+          min-versions-to-keep: 3
           delete-only-untagged-versions: 'false'
-
-      - name: Delete old data-toolbox images
-        uses: actions/delete-package-versions@v4
-        with:
-          package-name: 'data-toolbox'
-          package-type: 'container'
-          min-versions-to-keep: 5
-          delete-only-untagged-versions: 'false'
-
-      - name: Delete old browser-toolbox images
-        uses: actions/delete-package-versions@v4
-        with:
-          package-name: 'browser-toolbox'
-          package-type: 'container'
-          min-versions-to-keep: 5
-          delete-only-untagged-versions: 'false'
-
