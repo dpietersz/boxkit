@@ -155,6 +155,45 @@ apply_wayland_flags() {
   echo "INFO: patched $desktop_path"
 }
 
+# ─── Host environment variable injector ────────────────────────────────────
+# distrobox init=true shadows the host dbus session bus inside the container.
+# Apps that need gnome-keyring (org.freedesktop.secrets) — every Chromium and
+# Electron app storing passwords/tokens — must have DBUS_SESSION_BUS_ADDRESS
+# pointing at the host bus via /run/host/run/user/1000/bus.
+#
+# Separately, Chromium/Electron's KeyStorageLinux::SelectBackend checks
+# XDG_CURRENT_DESKTOP for the substring "GNOME" to decide whether to use
+# gnome-keyring. niri alone triggers the plaintext fallback. Setting
+# XDG_CURRENT_DESKTOP=niri:GNOME satisfies the check while keeping niri
+# as the primary desktop identifier.
+
+HOST_ENV_VARS="DBUS_SESSION_BUS_ADDRESS=unix:path=/run/host/run/user/1000/bus XDG_CURRENT_DESKTOP=niri:GNOME"
+
+apply_host_env_vars() {
+  desktop_path="$1"
+  [ -f "$desktop_path" ] || { echo "WARN: $desktop_path not found, skipping env injection"; return 0; }
+
+  # Idempotency: skip if already injected
+  if grep -q "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/host/run/user" "$desktop_path"; then
+    echo "INFO: $desktop_path already has host env vars"
+    return 0
+  fi
+
+  # Two shapes to handle:
+  #   Exec=cmd args...           → Exec=env DBUS_... XDG_... cmd args...
+  #   Exec=env VAR=val cmd ...   → Exec=env DBUS_... XDG_... VAR=val cmd ...
+  # New vars go BEFORE any existing env vars so they take precedence.
+  if grep -qE "^Exec=env " "$desktop_path"; then
+    # Already has env wrapper — insert our vars right after "env "
+    sed -i -E "s|^(Exec=env )(.*)\$|\1${HOST_ENV_VARS} \2|" "$desktop_path"
+  else
+    # No env wrapper — add one before the command
+    sed -i -E "s|^Exec=(.+)\$|Exec=env ${HOST_ENV_VARS} \1|" "$desktop_path"
+  fi
+
+  echo "INFO: injected host env vars into $desktop_path"
+}
+
 # ─── Discover-then-assert export list ───────────────────────────────────────
 # For each installed app package, ask pacman for its real .desktop file
 # basenames. Write those to /etc/distrobox-export.list. Then assert each
@@ -181,6 +220,7 @@ for pkg in $EXPORTED_PACKAGES; do
     echo "  found: $base"
     echo "$base" >> "$EXPORT_LIST_TMP"
     apply_wayland_flags "$d"
+    apply_host_env_vars "$d"
   done
 done
 
