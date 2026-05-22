@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.0](https://github.com/dpietersz/boxkit/compare/v1.5.0...v2.0.0) (2026-05-22)
+
+
+### ⚠ BREAKING CHANGES
+
+* consolidate to udx-toolbox + playwright-toolbox ([#23](https://github.com/dpietersz/boxkit/issues/23))
+
+### Features
+
+* consolidate to udx-toolbox + playwright-toolbox ([#23](https://github.com/dpietersz/boxkit/issues/23)) ([cb3a00b](https://github.com/dpietersz/boxkit/commit/cb3a00bb6e66ea47b9331f4eeeaa035f3c444223))
+
 ## [1.5.0](https://github.com/dpietersz/boxkit/compare/v1.4.3...v1.5.0) (2026-05-21)
 
 
