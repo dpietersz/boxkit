@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.0.4](https://github.com/dpietersz/boxkit/compare/v2.0.3...v2.0.4) (2026-05-27)
+
+
+### Bug Fixes
+
+* **udx-toolbox:** add xdg-open host-exec shim for in-container URL launching ([bd0e17b](https://github.com/dpietersz/boxkit/commit/bd0e17be779b335cce13ec442c816ce1bdc61487))
+
+
+### Miscellaneous
+
+* weekly package update ([7ad2e61](https://github.com/dpietersz/boxkit/commit/7ad2e61d91689d83d9efd752dbcab116af411884))
+
 ## [2.0.3](https://github.com/dpietersz/boxkit/compare/v2.0.2...v2.0.3) (2026-05-22)
 
 
