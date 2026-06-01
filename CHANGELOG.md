@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.1](https://github.com/dpietersz/boxkit/compare/v2.1.0...v2.1.1) (2026-06-01)
+
+
+### Bug Fixes
+
+* **ci:** free disk space on runner before image build ([fa5b24c](https://github.com/dpietersz/boxkit/commit/fa5b24c8d51b67dd7d2cfdea21fddce858e73c45))
+
 ## [2.1.0](https://github.com/dpietersz/boxkit/compare/v2.0.4...v2.1.0) (2026-06-01)
 
 
