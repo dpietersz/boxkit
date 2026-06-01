@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.2](https://github.com/dpietersz/boxkit/compare/v2.1.1...v2.1.2) (2026-06-01)
+
+
+### Bug Fixes
+
+* **udx-toolbox:** wrap libreoffice components so distrobox-export finds them ([f91b0ff](https://github.com/dpietersz/boxkit/commit/f91b0ffdef45e5e3db5057bdf457f7323ba931c2))
+
 ## [2.1.1](https://github.com/dpietersz/boxkit/compare/v2.1.0...v2.1.1) (2026-06-01)
 
 
