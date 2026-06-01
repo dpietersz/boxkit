@@ -5,13 +5,18 @@ set -e
 # ─────────────────────────────────────────────────────────────────────────────
 # udx-toolbox — unified Arch daily-driver toolbox
 #
-# Installs: Azure Storage Explorer, Obsidian, Anytype, Legcord, Polypane,
-#           Bruno, LocalSend, Ferdium.
+# Installs:
+#   Electron apps   — Azure Storage Explorer, Obsidian, Anytype, Legcord,
+#                     Polypane, Bruno, LocalSend, Ferdium.
+#   Native apps     — LibreOffice (fresh + nl pack + hunspell en_us/nl).
 #
-# Wayland strategy: preemptively patches Electron app .desktop files with
-# Wayland-native flags (ozone hint + PipeWire screen capture + Wayland window
-# decorations). No NVIDIA-specific flags — NVIDIA passthrough is handled by
-# the host at `distrobox create --nvidia` time, not by the image.
+# Wayland strategy: Electron apps get preemptively patched .desktop files with
+# Chromium/Ozone Wayland flags (ozone hint + PipeWire screen capture +
+# Wayland window decorations). Native (non-Chromium) apps must NEVER get
+# those flags — soffice and friends treat them as filenames and break.
+# Hence the ELECTRON_PACKAGES / NATIVE_PACKAGES split below.
+# No NVIDIA-specific flags — NVIDIA passthrough is handled by the host at
+# `distrobox create --nvidia` time, not by the image.
 #
 # Export-list strategy: discovers each app's actual installed .desktop
 # basename via `pacman -Ql`, writes /etc/distrobox-export.list from the
@@ -66,6 +71,11 @@ yay_install() {
 
 # Obsidian: official Arch extra repo (first-class package, preferred over AUR)
 pacman -S --noconfirm obsidian
+
+# LibreOffice: official Arch extra repo. `-fresh` is the latest feature branch
+# (matches the daily-driver bias of this image). Dutch UI/help + NL+EN_US
+# spellcheck dictionaries because Dimitri lives in NL.
+pacman -S --noconfirm libreoffice-fresh libreoffice-fresh-nl hunspell-en_us hunspell-nl
 
 # AUR packages
 yay_install storageexplorer
@@ -199,12 +209,28 @@ apply_host_env_vars() {
 # basenames. Write those to /etc/distrobox-export.list. Then assert each
 # entry resolves — build fails if any expected app has no .desktop on disk
 # (which would mean the host export would silently miss it).
+#
+# Two categories drive whether Chromium/Ozone Wayland flags get patched in:
+#
+#   ELECTRON_PACKAGES — Chromium-based apps. .desktop Exec lines get the
+#                       --ozone-platform-hint=auto + PipeWire capture flags.
+#                       Add new Electron apps here.
+#
+#   NATIVE_PACKAGES   — Non-Chromium apps (Qt, GTK, etc.) that would BREAK
+#                       if those flags were appended. LibreOffice's soffice
+#                       would treat them as filenames and the launchers
+#                       would error out. Add new native apps here.
+#
+# BOTH lists get host env-var injection (DBUS bus + XDG_CURRENT_DESKTOP) and
+# BOTH feed the same export list + assert gate.
 
-EXPORTED_PACKAGES="obsidian anytype-bin legcord-bin polypane bruno-bin localsend-bin ferdium-bin storageexplorer"
+ELECTRON_PACKAGES="obsidian anytype-bin legcord-bin polypane bruno-bin localsend-bin ferdium-bin storageexplorer"
+NATIVE_PACKAGES="libreoffice-fresh"
 
-EXPORT_LIST_TMP=$(mktemp)
-for pkg in $EXPORTED_PACKAGES; do
-  echo "── discovering .desktop files for $pkg ──"
+discover_and_register() {
+  pkg="$1"
+  patch_wayland="$2"  # "yes" → apply_wayland_flags; anything else → skip
+  echo "── discovering .desktop files for $pkg (wayland-flags=$patch_wayland) ──"
   desktop_files=$(pacman -Ql "$pkg" 2>/dev/null \
     | awk '$2 ~ "^/usr/share/applications/.+\\.desktop$" {print $2}')
 
@@ -219,9 +245,19 @@ for pkg in $EXPORTED_PACKAGES; do
     base=$(basename "$d" .desktop)
     echo "  found: $base"
     echo "$base" >> "$EXPORT_LIST_TMP"
-    apply_wayland_flags "$d"
+    if [ "$patch_wayland" = "yes" ]; then
+      apply_wayland_flags "$d"
+    fi
     apply_host_env_vars "$d"
   done
+}
+
+EXPORT_LIST_TMP=$(mktemp)
+for pkg in $ELECTRON_PACKAGES; do
+  discover_and_register "$pkg" "yes"
+done
+for pkg in $NATIVE_PACKAGES; do
+  discover_and_register "$pkg" "no"
 done
 
 # Dedupe and write final list
