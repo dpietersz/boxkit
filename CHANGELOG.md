@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.1.0](https://github.com/dpietersz/boxkit/compare/v2.0.4...v2.1.0) (2026-06-01)
+
+
+### Features
+
+* **udx-toolbox:** add libreoffice-fresh; split Electron/native flag patching ([1d90615](https://github.com/dpietersz/boxkit/commit/1d9061592dd2ad76240f265bc214c261e9cf52db))
+
+
+### Miscellaneous
+
+* weekly package update ([6c35cf2](https://github.com/dpietersz/boxkit/commit/6c35cf213a741194bc72be110d5c728d61a3b818))
+
 ## [2.0.4](https://github.com/dpietersz/boxkit/compare/v2.0.3...v2.0.4) (2026-05-27)
 
 
