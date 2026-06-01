@@ -107,6 +107,70 @@ ln -sf /opt/StorageExplorer/StorageExplorer /usr/bin/storageexplorer
 # need the real /opt/StorageExplorer (mixed case) filesystem path.
 sed -i -E '/^Exec=/ s/( )StorageExplorer( |$)/\1storageexplorer\2/' /usr/share/applications/storageexplorer.desktop
 
+# ─── libreoffice host-export workaround ─────────────────────────────────────
+# Same case-sensitive-grep trap as storageexplorer. LibreOffice's .desktop
+# files have:
+#   Exec=...libreoffice --writer %U     (component is a flag, not a hyphenated name)
+#   Name=LibreOffice Writer             (space + mixed case)
+# Neither contains the literal "libreoffice-writer" (lowercase, hyphenated)
+# that `distrobox-export --app libreoffice-writer` greps for. dotfiles' init
+# hook calls distrobox-export with the .desktop basename, so every
+# libreoffice-* entry fails with "cannot find any desktop files" without
+# this workaround.
+#
+# Fix: per user-facing component, create a wrapper script at
+# /usr/bin/libreoffice-<comp> that execs libreoffice with the right flag,
+# then rewrite the primary Exec= line in the matching .desktop to invoke
+# the wrapper. The literal "libreoffice-<comp>" now appears in Exec=,
+# satisfying distrobox-export's grep. Functionality is unchanged.
+#
+# Components handled: base, calc, draw, impress, math, writer, startcenter.
+# libreoffice-xsltfilter is an internal dev tool (XSLT filter editor), not a
+# user app — added to EXPORT_SKIP further down so it's omitted from the
+# export list rather than wrapped.
+for entry in base:--base calc:--calc draw:--draw impress:--impress \
+             math:--math writer:--writer startcenter:; do
+  lo_name="${entry%%:*}"
+  lo_flag="${entry##*:}"
+  [ "$lo_flag" = "$lo_name" ] && lo_flag=""  # startcenter form `name:` → empty flag
+  lo_wrapper="/usr/bin/libreoffice-${lo_name}"
+  lo_desktop="/usr/share/applications/libreoffice-${lo_name}.desktop"
+
+  if [ ! -f "$lo_desktop" ]; then
+    echo "ERROR: $lo_desktop missing — libreoffice install incomplete"
+    exit 1
+  fi
+
+  cat > "$lo_wrapper" <<WRAPPER
+#!/bin/sh
+exec /usr/bin/libreoffice ${lo_flag} "\$@"
+WRAPPER
+  chmod +x "$lo_wrapper"
+
+  if [ -n "$lo_flag" ]; then
+    # Components with a flag: replace every `libreoffice --<flag>` occurrence
+    # (covers both the primary Exec line and any Desktop Action Exec lines)
+    # with the wrapper. The wrapper enforces the flag, so dropping it from
+    # the Exec is safe.
+    sed -i -E "s|libreoffice ${lo_flag}|libreoffice-${lo_name}|g" "$lo_desktop"
+  else
+    # startcenter: bare `libreoffice <field-code>` invocation. Only rewrite
+    # the primary Exec line (matched by the address regex — `libreoffice`
+    # followed by whitespace then an XDG field code). The file also has
+    # Action Exec lines like `libreoffice --writer` that must remain
+    # unchanged; the address regex excludes them.
+    sed -i -E "/^Exec=.*libreoffice[[:space:]]+%[fFuUcik]/ s|libreoffice |libreoffice-startcenter |" "$lo_desktop"
+  fi
+
+  # Assertion: the literal wrapper name must now appear in Exec= somewhere.
+  if ! grep -qE "^Exec=.*libreoffice-${lo_name}" "$lo_desktop"; then
+    echo "ASSERT FAIL: libreoffice-${lo_name} not present in any Exec= of $lo_desktop"
+    grep '^Exec=' "$lo_desktop"
+    exit 1
+  fi
+  echo "INFO: wrapped libreoffice-${lo_name} (flag='${lo_flag}')"
+done
+
 # ─── Wayland flag patcher (preemptive) ──────────────────────────────────────
 # Applied to every Electron app's primary .desktop Exec= line so the apps
 # run as Wayland-native windows on niri (no XWayland fallback) and can use
@@ -227,6 +291,11 @@ apply_host_env_vars() {
 ELECTRON_PACKAGES="obsidian anytype-bin legcord-bin polypane bruno-bin localsend-bin ferdium-bin storageexplorer"
 NATIVE_PACKAGES="libreoffice-fresh"
 
+# Discovered .desktop basenames in this list are omitted from the export
+# list and not patched. Use for internal/dev .desktops a package ships
+# that shouldn't reach the host launcher.
+EXPORT_SKIP="libreoffice-xsltfilter"
+
 discover_and_register() {
   pkg="$1"
   patch_wayland="$2"  # "yes" → apply_wayland_flags; anything else → skip
@@ -243,6 +312,12 @@ discover_and_register() {
 
   for d in $desktop_files; do
     base=$(basename "$d" .desktop)
+    case " $EXPORT_SKIP " in
+      *" $base "*)
+        echo "  skip (EXPORT_SKIP): $base"
+        continue
+        ;;
+    esac
     echo "  found: $base"
     echo "$base" >> "$EXPORT_LIST_TMP"
     if [ "$patch_wayland" = "yes" ]; then
