@@ -1,5 +1,22 @@
 # Changelog
 
+## [2.1.3](https://github.com/dpietersz/boxkit/compare/v2.1.2...v2.1.3) (2026-06-08)
+
+
+### Bug Fixes
+
+* **ci:** trigger scheduled release builds ([1cfefde](https://github.com/dpietersz/boxkit/commit/1cfefdee48eaa95697bcec9dd4beeb3ad0820a48))
+
+
+### Documentation
+
+* add Claude repository guidance ([1d9e0d0](https://github.com/dpietersz/boxkit/commit/1d9e0d00f54d313f1884fe05e75fa6165eb77ba1))
+
+
+### Miscellaneous
+
+* weekly package update ([de49913](https://github.com/dpietersz/boxkit/commit/de499136f67483b7594ebb506518ccd4b5f0cdb5))
+
 ## [2.1.2](https://github.com/dpietersz/boxkit/compare/v2.1.1...v2.1.2) (2026-06-01)
 
 
