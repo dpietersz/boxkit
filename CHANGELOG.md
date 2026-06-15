@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.4](https://github.com/dpietersz/boxkit/compare/v2.1.3...v2.1.4) (2026-06-15)
+
+
+### Bug Fixes
+
+* **playwright-toolbox:** install @playwright/test runner + set NODE_PATH ([aa6fdb4](https://github.com/dpietersz/boxkit/commit/aa6fdb44d245f186591b1fd030a0159a4ab82ca2))
+
 ## [2.1.3](https://github.com/dpietersz/boxkit/compare/v2.1.2...v2.1.3) (2026-06-08)
 
 
