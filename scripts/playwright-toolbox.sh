@@ -18,8 +18,12 @@ echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.co
 apt-get update
 apt-get install -y nodejs
 
-# Install Playwright globally
-npm install -g playwright
+# Install Playwright CLI + test runner globally.
+# Both packages provide a `playwright` bin, so install them in a SINGLE npm
+# transaction — a sequential install hits EEXIST on /usr/bin/playwright.
+# @playwright/test is the test runner that test files import; without it any
+# `import { test } from '@playwright/test'` fails with MODULE_NOT_FOUND.
+npm install -g playwright @playwright/test
 
 # Set up Playwright browsers path for container
 # Browsers will be installed to /opt/playwright-browsers for all users
@@ -46,6 +50,15 @@ NPM_GLOBAL_BIN="$(npm config get prefix)/bin"
 case ":$PATH:" in
   *":$NPM_GLOBAL_BIN:"*) ;;
   *) export PATH="$NPM_GLOBAL_BIN:$PATH" ;;
+esac
+
+# Make globally-installed packages (e.g. @playwright/test) resolvable from any
+# project dir. Without this, NODE_PATH is empty and test files outside this
+# image's node_modules cannot `require`/`import` @playwright/test.
+NPM_GLOBAL_MODULES="$(npm config get prefix)/lib/node_modules"
+case ":$NODE_PATH:" in
+  *":$NPM_GLOBAL_MODULES:"*) ;;
+  *) export NODE_PATH="${NODE_PATH:+$NODE_PATH:}$NPM_GLOBAL_MODULES" ;;
 esac
 EOF
 
