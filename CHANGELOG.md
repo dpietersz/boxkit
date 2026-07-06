@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.2.0](https://github.com/dpietersz/boxkit/compare/v2.1.7...v2.2.0) (2026-07-06)
+
+
+### Features
+
+* **udx-toolbox:** add darktable (OpenCL RAW editor) ([1c4bff1](https://github.com/dpietersz/boxkit/commit/1c4bff1b3373ebb23086cc3475145152058504ee))
+
 ## [2.1.7](https://github.com/dpietersz/boxkit/compare/v2.1.6...v2.1.7) (2026-07-05)
 
 
