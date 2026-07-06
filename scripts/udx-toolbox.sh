@@ -8,7 +8,8 @@ set -e
 # Installs:
 #   Electron apps   — Azure Storage Explorer, Obsidian, Anytype, Legcord,
 #                     Polypane, Bruno, LocalSend, Ferdium.
-#   Native apps     — LibreOffice (fresh + nl pack + hunspell en_us/nl).
+#   Native apps     — LibreOffice (fresh + nl pack + hunspell en_us/nl),
+#                     darktable (OpenCL-accelerated RAW editor).
 #
 # Wayland strategy: Electron apps get preemptively patched .desktop files with
 # Chromium/Ozone Wayland flags (ozone hint + PipeWire screen capture +
@@ -76,6 +77,12 @@ pacman -S --noconfirm obsidian
 # (matches the daily-driver bias of this image). Dutch UI/help + NL+EN_US
 # spellcheck dictionaries because Dimitri lives in NL.
 pacman -S --noconfirm libreoffice-fresh libreoffice-fresh-nl hunspell-en_us hunspell-nl
+
+# darktable: official Arch extra repo (native GTK RAW editor). `ocl-icd` is the
+# vendor-neutral OpenCL ICD loader so darktable can use GPU acceleration when an
+# ICD is present; the NVIDIA OpenCL implementation is mounted host-side by
+# `distrobox create --nvidia` (falls back to CPU on the Intel T580 / when absent).
+pacman -S --noconfirm darktable ocl-icd
 
 # AUR packages
 yay_install storageexplorer
@@ -334,6 +341,27 @@ done
 for pkg in $NATIVE_PACKAGES; do
   discover_and_register "$pkg" "no"
 done
+
+# ─── darktable export-list registration (reverse-DNS .desktop trap) ─────────
+# darktable ships /usr/share/applications/org.darktable.darktable.desktop with
+# Name=darktable / Exec=darktable. distrobox-export --app greps Exec=/Name= for
+# the export-list entry string (same trap as storageexplorer/libreoffice above);
+# the reverse-DNS basename "org.darktable.darktable" appears in NEITHER line, so
+# exporting by that basename would silently find nothing on the host. Normalize
+# the launcher to darktable.desktop so the list entry is the literal "darktable"
+# that Exec=darktable already contains, then register it explicitly (it is not in
+# NATIVE_PACKAGES precisely to avoid the auto-discovered reverse-DNS basename).
+# Native app → no Wayland/Ozone flags; host env vars injected for parity.
+if [ -f /usr/share/applications/org.darktable.darktable.desktop ]; then
+  mv /usr/share/applications/org.darktable.darktable.desktop \
+     /usr/share/applications/darktable.desktop
+fi
+if [ ! -f /usr/share/applications/darktable.desktop ]; then
+  echo "ERROR: darktable.desktop not found after install — package layout changed"
+  exit 1
+fi
+apply_host_env_vars /usr/share/applications/darktable.desktop
+echo darktable >> "$EXPORT_LIST_TMP"
 
 # Dedupe and write final list
 sort -u "$EXPORT_LIST_TMP" > /etc/distrobox-export.list
