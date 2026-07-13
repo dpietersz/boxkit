@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.0](https://github.com/dpietersz/boxkit/compare/v2.2.1...v2.3.0) (2026-07-13)
+
+
+### Features
+
+* **ubuntu-gui-toolbox:** ship LocalSend from Ubuntu base; fix CI chromium build ([a166e77](https://github.com/dpietersz/boxkit/commit/a166e775b837f76f29a878420882c72cf7f168e2))
+
 ## [2.2.1](https://github.com/dpietersz/boxkit/compare/v2.2.0...v2.2.1) (2026-07-12)
 
 
