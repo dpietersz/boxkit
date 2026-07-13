@@ -21,6 +21,7 @@ jobs:
         containerfile:
           - udx-toolbox
           - playwright-toolbox
+          - ubuntu-gui-toolbox
     steps:
       # Free up disk space on the runner before building.
       # GitHub's ubuntu-24.04 runner ships with ~14GB free out of ~30GB; the

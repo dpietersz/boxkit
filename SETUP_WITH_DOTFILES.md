@@ -20,7 +20,7 @@ This approach keeps containers lightweight while ensuring your entire developmen
 
 ### Arch Daily Driver
 - **Base**: Arch Linux
-- **Pre-installed GUI apps**: Obsidian, AnyType, Polypane, Microsoft Storage Explorer (from AUR)
+- **Pre-installed GUI apps**: Obsidian, Polypane, Bruno, Legcord, Microsoft Storage Explorer (from AUR)
 - **Pre-installed system tools**: git, pass, zsh, ffmpeg, build tools
 - **Managed by dotfiles**: All CLI tools (same as Fedora)
 

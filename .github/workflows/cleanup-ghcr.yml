@@ -1,7 +1,7 @@
 name: cleanup-ghcr
 
 # Retention policy:
-#   - udx-toolbox, playwright-toolbox: keep the 3 most recent versions
+#   - udx-toolbox, playwright-toolbox, ubuntu-gui-toolbox: keep the 3 most recent versions
 #     (which includes the one tagged `latest`). Older versions are pruned.
 #   - Decommissioned images (boxkit, browser-toolbox, data-toolbox,
 #     notetaking-toolbox) are NOT pruned here — they are wiped entirely
@@ -31,6 +31,14 @@ jobs:
         uses: actions/delete-package-versions@v4
         with:
           package-name: 'playwright-toolbox'
+          package-type: 'container'
+          min-versions-to-keep: 3
+          delete-only-untagged-versions: 'false'
+
+      - name: Prune old ubuntu-gui-toolbox versions (keep 3)
+        uses: actions/delete-package-versions@v4
+        with:
+          package-name: 'ubuntu-gui-toolbox'
           package-type: 'container'
           min-versions-to-keep: 3
           delete-only-untagged-versions: 'false'

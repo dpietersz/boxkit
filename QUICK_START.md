@@ -4,7 +4,8 @@ This repo builds two container images for use with `distrobox` on Bluefin + niri
 
 | Image | Base | Purpose |
 |-------|------|---------|
-| `udx-toolbox` | Arch (toolbx) | Daily-driver GUI apps: Storage Explorer, Obsidian, Anytype, Legcord, Polypane, Bruno, LocalSend, Ferdium |
+| `udx-toolbox` | Arch (toolbx) | Daily-driver GUI apps: Storage Explorer, Obsidian, Legcord, Polypane, Bruno, LibreOffice, darktable |
+| `ubuntu-gui-toolbox` | Ubuntu 24.04 (pinned) | LocalSend — needs an older glibc than rolling Arch provides |
 | `playwright-toolbox` | Ubuntu (toolbx) | Playwright E2E testing with Chromium / Firefox / WebKit |
 
 Both are published to GHCR at `ghcr.io/<your-gh-user>/<image>:latest`.
@@ -158,7 +159,7 @@ A pure-Wayland window often has no XWayland markers. An easier signal: `wayland-
 
 See the "On the P14s Gen 5" section above — `nvidia-smi` inside the container is the canonical test.
 
-### Screen sharing in Ferdium / Legcord shows a black rectangle
+### Screen sharing in Legcord shows a black rectangle
 
 Wayland screen capture requires the host's `xdg-desktop-portal` and `xdg-desktop-portal-gnome` (or `-wlr` on niri-like compositors) to be running. This is a host concern, not the image. Verify on the host:
 

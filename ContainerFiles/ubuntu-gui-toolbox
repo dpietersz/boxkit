@@ -1,0 +1,20 @@
+# Pinned to 24.04 (glibc 2.39) on purpose — NOT :latest.
+# This image exists because upstream-built GUI binaries (Flutter/Electron apps
+# shipped as .deb against an Ubuntu LTS toolchain) fail on a rolling Arch base.
+# Tracking :latest would eventually roll this to a newer Ubuntu with a newer
+# glibc and reintroduce exactly the breakage the image was created to fix.
+# Bump this tag deliberately, and re-verify each app still renders after.
+FROM quay.io/toolbx/ubuntu-toolbox:24.04
+
+LABEL com.github.containers.toolbox="true" \
+      usage="This image is meant to be used with the toolbox or distrobox command" \
+      summary="Ubuntu LTS toolbox for upstream-built GUI apps that require an older glibc than the rolling Arch udx-toolbox provides (LocalSend)" \
+      maintainer="pietersz@gmail.com"
+
+# Copy the setup scripts
+COPY ../scripts/ubuntu-gui-toolbox.sh /
+COPY ../scripts/distrobox-shims.sh /
+
+# Run the setup scripts
+RUN chmod +x ubuntu-gui-toolbox.sh distrobox-shims.sh && /ubuntu-gui-toolbox.sh
+RUN rm /ubuntu-gui-toolbox.sh /distrobox-shims.sh

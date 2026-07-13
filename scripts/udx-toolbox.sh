@@ -6,8 +6,9 @@ set -e
 # udx-toolbox — unified Arch daily-driver toolbox
 #
 # Installs:
-#   Electron apps   — Azure Storage Explorer, Obsidian, Anytype, Legcord,
-#                     Polypane, Bruno, LocalSend, Ferdium.
+#   Electron apps   — Azure Storage Explorer, Obsidian, Legcord, Polypane, Bruno.
+#                     (LocalSend moved to ubuntu-gui-toolbox — glibc floor.)
+#                     (Anytype + Ferdium removed 2026-07-13 — unused.)
 #   Native apps     — LibreOffice (fresh + nl pack + hunspell en_us/nl),
 #                     darktable (OpenCL-accelerated RAW editor).
 #
@@ -85,13 +86,28 @@ pacman -S --noconfirm libreoffice-fresh libreoffice-fresh-nl hunspell-en_us huns
 pacman -S --noconfirm darktable ocl-icd
 
 # AUR packages
+# LocalSend is deliberately NOT installed here — it lives in ubuntu-gui-toolbox.
+# The AUR `localsend-bin` repacks upstream's Ubuntu-built Flutter binary, whose
+# Dart VM fails to initialise against this image's rolling glibc (2.43): the
+# window maps, nothing paints, and stderr stays empty. See the header of
+# scripts/ubuntu-gui-toolbox.sh for the full diagnosis. Do not re-add it here.
+# Ferdium and Anytype were removed 2026-07-13 (no longer used).
+#
+# Removing Ferdium also FIXED the CI build. ferdium-bin depended on `electron37`,
+# which Arch has since dropped from [extra] (it now ships electron + electron39..43).
+# With no repo package to satisfy it, yay fell back to the AUR `electron37`
+# PKGBUILD — which builds Electron/Chromium FROM SOURCE, cloning the multi-GB
+# chromium-mirror. That is what hung the v2.2.1 build for 1h49m before it failed,
+# with no code change in the repo to explain it.
+#
+# The lesson generalises: an AUR app pinned to an electronNN that has aged out of
+# [extra] turns a 9-minute image build into a multi-hour Chromium compile, silently.
+# If a build ever starts taking hours, check for a source-built electron first.
+# legcord-bin pins electron41, which IS in [extra] — that one is fine.
 yay_install storageexplorer
-yay_install anytype-bin
 yay_install legcord-bin
 yay_install polypane
 yay_install bruno-bin
-yay_install localsend-bin
-yay_install ferdium-bin
 
 # ─── storageexplorer host-export workaround ─────────────────────────────────
 # distrobox-export --app <name> uses a CASE-SENSITIVE grep against Exec= and
@@ -295,7 +311,11 @@ apply_host_env_vars() {
 # BOTH lists get host env-var injection (DBUS bus + XDG_CURRENT_DESKTOP) and
 # BOTH feed the same export list + assert gate.
 
-ELECTRON_PACKAGES="obsidian anytype-bin legcord-bin polypane bruno-bin localsend-bin ferdium-bin storageexplorer"
+# NOTE: localsend-bin was previously (wrongly) listed in ELECTRON_PACKAGES.
+# LocalSend is Flutter/GTK, not Chromium, so the Ozone flags below were never
+# valid for it. It now ships from ubuntu-gui-toolbox instead — see above.
+# anytype-bin and ferdium-bin removed 2026-07-13 (unused; ferdium also broke CI).
+ELECTRON_PACKAGES="obsidian legcord-bin polypane bruno-bin storageexplorer"
 NATIVE_PACKAGES="libreoffice-fresh"
 
 # Discovered .desktop basenames in this list are omitted from the export
