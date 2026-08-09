@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.4](https://github.com/dpietersz/boxkit/compare/v2.3.3...v2.3.4) (2026-08-09)
+
+
+### Miscellaneous
+
+* weekly package update ([c6e4177](https://github.com/dpietersz/boxkit/commit/c6e417746b66ba4cfb2eedbc575d5daf6d3b0f27))
+
 ## [2.3.3](https://github.com/dpietersz/boxkit/compare/v2.3.2...v2.3.3) (2026-08-02)
 
 
