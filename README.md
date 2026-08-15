@@ -88,13 +88,13 @@ Congratulations, you have successfully enabled container signing for all your cu
 
 ## Available Toolboxes
 
-This repository ships two CI-published toolbox images (pulled from GHCR) plus one **local-build-only** image. See `QUICK_START.md` for usage, NVIDIA setup, and the `/etc/distrobox-export.list` contract.
+This repository ships three CI-published toolbox images (pulled from GHCR). See `QUICK_START.md` for usage, NVIDIA setup, and the `/etc/distrobox-export.list` contract.
 
 | Image | Base | Delivery | Description |
 |-------|------|----------|-------------|
 | `udx-toolbox` | Arch | GHCR (CI) | Daily-driver GUI apps: Storage Explorer, Obsidian, Legcord, Polypane, Bruno, LibreOffice, darktable. (LocalSend lives in `ubuntu-gui-toolbox`; Anytype + Ferdium removed 2026-07-13.) Wayland/niri-ready, NVIDIA-compatible via `distrobox create --nvidia`. |
 | `playwright-toolbox` | Ubuntu | GHCR (CI) | Playwright with Chromium, Firefox, WebKit for E2E testing. |
-| `resolve-toolbox` | Fedora | **Local build** | DaVinci Resolve. NVIDIA-only. Fedora deps image built on your machine by `scripts/provision-resolve.sh`; Resolve itself is installed into the box at provision time from your license-walled installer (never in the image). See [resolve-toolbox (DaVinci Resolve)](#resolve-toolbox-davinci-resolve) below. |
+| `ubuntu-gui-toolbox` | Ubuntu 24.04 | GHCR (CI) | GUI apps whose prebuilt binaries need a stable glibc rather than rolling Arch — currently LocalSend. Same `/etc/distrobox-export.list` contract as `udx-toolbox`. |
 
 ## Using the custom images
 
@@ -197,56 +197,10 @@ echo $DISPLAY  # Should show :0 or similar
 ls $XDG_RUNTIME_DIR/wayland-*  # Should show wayland socket
 ``` 
 
-## resolve-toolbox (DaVinci Resolve)
-
-`resolve-toolbox` runs **DaVinci Resolve** in a **Fedora** distrobox (base and fix set adapted from the proven [zelikos/davincibox](https://github.com/zelikos/davincibox)). Fedora is deliberate: Resolve's bundled Qt/libraries crash on Arch's newer system libraries (`SIGSEGV` in `libQt5Core`), whereas Fedora is close to Blackmagic's supported RHEL/Rocky target and works.
-
-The split is: the **image is Fedora + Resolve's runtime dependencies only — no Resolve, no licensed content** (so it never needs to be a registration-walled or non-redistributable image). **DaVinci Resolve itself is installed into the container at provision time** by `setup-resolve` (shipped in the image) from your local installer. A guided provisioner (`scripts/provision-resolve.sh`) drives the whole thing — build image → create box → install Resolve — pausing only at the steps only you can do (downloading the installer, activating Studio). It is idempotent — safe to re-run.
-
-It is **built locally, not in CI** (kept next to the provision flow). Do not add it to `build-containers.yml` / `cleanup-ghcr.yml` / the release flow without also wiring a provision path.
-
-### Requirements
-
-- **NVIDIA GPU.** Resolve on Linux effectively requires a supported GPU; the provisioner refuses to run on a non-NVIDIA host (i.e. only the P14s, not the T580).
-- **Resolve Studio (recommended).** The free version on Linux **cannot decode H.264/H.265** — so consumer camera/phone footage won't import without transcoding to DNxHR/ProRes first. Studio (~US$295, one-time, perpetual, no subscription) adds H.264/H.265 decode. Buy the download/activation-key version online from a Blackmagic-authorized reseller. Activation persists in `$HOME` (mounted), so it survives image rebuilds.
-- **Wayland is handled automatically.** Resolve is X11-only; the `davinci-resolve` launcher wrapper forces `QT_QPA_PLATFORM=xcb` so it runs through XWayland (works on niri/Hyprland/GNOME-Wayland). Verified on niri 26.04, including UI dragging.
-- **VRAM matters.** On a 4 GB card (e.g. RTX 500 Ada) Resolve will hit "GPU memory is full" on 4K timelines. Edit at a **1080p timeline + Half/Quarter proxy resolution**, generate **Optimized Media** for 4K clips, and close GPU-hungry browsers while editing. These are Resolve Preferences/Project settings (stored in `$HOME`), so they persist across rebuilds.
-- **~15–20 GB free disk** for the Fedora image plus the Resolve install.
-
-### Installation
-
-```bash
-# 1. Have the boxkit repo checked out (a fresh machine needs this first):
-git clone https://github.com/dpietersz/boxkit ~/dev/Projects/boxkit
-
-# 2. Run the guided provisioner (Studio path is the default):
-~/dev/Projects/boxkit/scripts/provision-resolve.sh
-```
-
-It will, in order: preflight (podman/distrobox/NVIDIA) → **wait for you to download the Resolve `.zip`/`.run`** into `~/Sync/resolve` (or `~/Downloads`; opens the download page for you) → build the Fedora deps image → create the `resolve-toolbox` distrobox with `--nvidia` → **install Resolve into the box** (extract + headless install + patchelf fixes) → export it to your host launcher → print next-steps (incl. Studio activation + the 4 GB VRAM proxy tips).
-
-The installer is read straight from your installer dir at provision time (it's mounted into the box via `$HOME`) — it **never enters the image or the repo**. Keep the `.zip` in a synced folder (e.g. Syncthing) and a reinstall just re-runs the provisioner with no re-download.
-
-### Updating / rebuilding
-
-```bash
-# New Resolve installer (upgrade): drop the new .zip in your installer dir, then
-~/dev/Projects/boxkit/scripts/provision-resolve.sh --reinstall
-# Dependency/image change (rare): rebuild the image, box, and reinstall Resolve
-~/dev/Projects/boxkit/scripts/provision-resolve.sh --rebuild --recreate --reinstall
-```
-
-### Codec note for this setup
-
-All three of the reference cameras produce H.264/HEVC — **iPhone 13 Mini** (HEVC/Dolby Vision), **Insta360 Go 3S** (H.264/HEVC), **Panasonic Lumix GX80** (H.264). None output ProRes/DNxHD natively, so **Studio is effectively required** for a transcode-free workflow.
-
-> **Prior art:** [zelikos/davincibox](https://github.com/zelikos/davincibox) is a well-known boxkit-style Resolve container worth consulting if the AUR install path needs adjustment.
-
 ## Custom images built with boxkit
 
 Here is a list of some awesome custom images built using boxkit.
 
-- [DaVinci Box](https://github.com/zelikos/davincibox) - Container for DaVinci Resolve installation and runtime dependencies on Linux.
 - [obs-studio-portable](https://github.com/ublue-os/obs-studio-portable) - OCI container image of OBS Studio that bundles a curated collection of 3rd party plugins.
 - [bazzite-arch](https://github.com/ublue-os/bazzite-arch) - A ready-to-game Arch Linux based OCI designed for use exclusively in distrobox.
 
