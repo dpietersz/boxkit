@@ -1,0 +1,5 @@
+# ─── Secrets (belt-and-suspenders; cosign.key lives in the SIGNING_SECRET) ────
+cosign.key
+
+# ─── Local build/test artifacts ──────────────────────────────────────────────
+*.log
