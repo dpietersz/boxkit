@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.3.5](https://github.com/dpietersz/boxkit/compare/v2.3.4...v2.3.5) (2026-08-15)
+
+
+### Documentation
+
+* drop resolve-toolbox, document ubuntu-gui-toolbox ([aa7e3fa](https://github.com/dpietersz/boxkit/commit/aa7e3fa90974a7f08940b5ed2d7e69b02bc315f3))
+
+
+### Miscellaneous
+
+* ignore cosign.key and local log artifacts ([b9810ea](https://github.com/dpietersz/boxkit/commit/b9810eab732f28d5e2a628037bae7589b070d3e1))
+
 ## [2.3.4](https://github.com/dpietersz/boxkit/compare/v2.3.3...v2.3.4) (2026-08-09)
 
 
