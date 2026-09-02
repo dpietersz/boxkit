@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.9](https://github.com/dpietersz/boxkit/compare/v2.3.8...v2.3.9) (2026-09-02)
+
+
+### Bug Fixes
+
+* **playwright-toolbox:** install full Chromium browser ([180852b](https://github.com/dpietersz/boxkit/commit/180852b79005ac8244f4bf1164739c87df5fb539))
+
 ## [2.3.8](https://github.com/dpietersz/boxkit/compare/v2.3.7...v2.3.8) (2026-08-30)
 
 
