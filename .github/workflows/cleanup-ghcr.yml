@@ -19,26 +19,54 @@ jobs:
     permissions:
       packages: write
     steps:
-      - name: Prune old udx-toolbox versions (keep 3)
-        uses: actions/delete-package-versions@v4
+      # actions/delete-package-versions still targets deprecated Node 20.
+      # Use github-script v9's Node 24 runtime and the Packages API directly.
+      - name: Prune old toolbox versions (keep 3)
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0 (Node 24)
         with:
-          package-name: 'udx-toolbox'
-          package-type: 'container'
-          min-versions-to-keep: 3
-          delete-only-untagged-versions: 'false'
+          script: |
+            const packageNames = [
+              "udx-toolbox",
+              "playwright-toolbox",
+              "ubuntu-gui-toolbox",
+            ];
+            const owner = context.repo.owner;
+            const { data: account } = await github.rest.users.getByUsername({
+              username: owner,
+            });
+            const organization = account.type === "Organization";
+            const ownerKey = organization ? "org" : "username";
+            const listVersions = organization
+              ? github.rest.packages.getAllPackageVersionsForPackageOwnedByOrg
+              : github.rest.packages.getAllPackageVersionsForPackageOwnedByUser;
+            const deleteVersion = organization
+              ? github.rest.packages.deletePackageVersionForOrg
+              : github.rest.packages.deletePackageVersionForUser;
 
-      - name: Prune old playwright-toolbox versions (keep 3)
-        uses: actions/delete-package-versions@v4
-        with:
-          package-name: 'playwright-toolbox'
-          package-type: 'container'
-          min-versions-to-keep: 3
-          delete-only-untagged-versions: 'false'
+            for (const packageName of packageNames) {
+              const ownerParams = { [ownerKey]: owner };
+              const versions = await github.paginate(listVersions, {
+                ...ownerParams,
+                package_type: "container",
+                package_name: packageName,
+                per_page: 100,
+              });
+              versions.sort(
+                (a, b) => new Date(b.created_at) - new Date(a.created_at),
+              );
 
-      - name: Prune old ubuntu-gui-toolbox versions (keep 3)
-        uses: actions/delete-package-versions@v4
-        with:
-          package-name: 'ubuntu-gui-toolbox'
-          package-type: 'container'
-          min-versions-to-keep: 3
-          delete-only-untagged-versions: 'false'
+              core.info(
+                `${packageName}: keeping ${Math.min(3, versions.length)} of ${versions.length} versions`,
+              );
+              for (const version of versions.slice(3)) {
+                core.info(
+                  `Deleting ${packageName} version ${version.id} (${version.name})`,
+                );
+                await deleteVersion({
+                  ...ownerParams,
+                  package_type: "container",
+                  package_name: packageName,
+                  package_version_id: version.id,
+                });
+              }
+            }
