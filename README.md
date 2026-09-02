@@ -93,7 +93,7 @@ This repository ships three CI-published toolbox images (pulled from GHCR). See 
 | Image | Base | Delivery | Description |
 |-------|------|----------|-------------|
 | `udx-toolbox` | Arch | GHCR (CI) | Daily-driver GUI apps: Storage Explorer, Obsidian, Legcord, Polypane, Bruno, LibreOffice, darktable. (LocalSend lives in `ubuntu-gui-toolbox`; Anytype + Ferdium removed 2026-07-13.) Wayland/niri-ready, NVIDIA-compatible via `distrobox create --nvidia`. |
-| `playwright-toolbox` | Ubuntu | GHCR (CI) | Playwright with Chromium, Firefox, WebKit for E2E testing. |
+| `playwright-toolbox` | Ubuntu | GHCR (CI) | Playwright with full Chromium, Chromium headless shell, Firefox, and WebKit for E2E testing. |
 | `ubuntu-gui-toolbox` | Ubuntu 24.04 | GHCR (CI) | GUI apps whose prebuilt binaries need a stable glibc rather than rolling Arch — currently LocalSend. Same `/etc/distrobox-export.list` contract as `udx-toolbox`. |
 
 ## Using the custom images
@@ -162,8 +162,9 @@ playwright test
 - **Node.js 22.x** (LTS)
 - **Playwright** (latest)
 - **Pre-installed browsers:**
-  - Chromium
-  - Firefox  
+  - Full Chromium (headed or headless)
+  - Chromium headless shell
+  - Firefox
   - WebKit (Safari engine)
 - All system dependencies for headed and headless browser testing
 

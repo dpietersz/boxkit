@@ -33,8 +33,12 @@ mkdir -p "$PLAYWRIGHT_BROWSERS_PATH"
 # Install Playwright system dependencies (this works on Ubuntu!)
 npx playwright install-deps
 
-# Install all Playwright browsers (Chromium, Firefox, WebKit)
-npx playwright install chromium firefox webkit
+# Install the full Chromium browser plus Firefox and WebKit. --no-shell makes
+# the full Chromium download explicit instead of relying on Playwright's default.
+npx playwright install --no-shell chromium firefox webkit
+
+# Keep the lightweight Chromium headless shell available for headless runs too.
+npx playwright install chromium-headless-shell
 
 # Set proper permissions for browsers directory
 # Use 777 to allow MCP server to create browser profiles
