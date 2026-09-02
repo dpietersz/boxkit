@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.11](https://github.com/dpietersz/boxkit/compare/v2.3.10...v2.3.11) (2026-09-02)
+
+
+### Bug Fixes
+
+* **ci:** preserve Podman-compatible signatures ([01ca305](https://github.com/dpietersz/boxkit/commit/01ca305658f4a22127a8da5f07dc3704f68b94f1))
+
 ## [2.3.10](https://github.com/dpietersz/boxkit/compare/v2.3.9...v2.3.10) (2026-09-02)
 
 
