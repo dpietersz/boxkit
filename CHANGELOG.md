@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.10](https://github.com/dpietersz/boxkit/compare/v2.3.9...v2.3.10) (2026-09-02)
+
+
+### Miscellaneous
+
+* **ci:** upgrade actions to Node 24 ([aec2b68](https://github.com/dpietersz/boxkit/commit/aec2b68b2b66e6ce844483bf2d64c2533f0d7c5e))
+
 ## [2.3.9](https://github.com/dpietersz/boxkit/compare/v2.3.8...v2.3.9) (2026-09-02)
 
 
