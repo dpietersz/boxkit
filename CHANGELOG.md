@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.3.13](https://github.com/dpietersz/boxkit/compare/v2.3.12...v2.3.13) (2026-09-07)
+
+
+### Bug Fixes
+
+* **ubuntu-gui-toolbox:** bump LocalSend to 1.18.2 and gate runtime-loaded libs ([336f82b](https://github.com/dpietersz/boxkit/commit/336f82bbe7f5f62420102f6566c633b024a9c7c8))
+* **udx-toolbox:** install Storage Explorer from upstream tarball, not AUR ([bf0e014](https://github.com/dpietersz/boxkit/commit/bf0e01499d6061f63ae0a05fc6777d7278e91e71))
+
 ## [2.3.12](https://github.com/dpietersz/boxkit/compare/v2.3.11...v2.3.12) (2026-09-06)
 
 
