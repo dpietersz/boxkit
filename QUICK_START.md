@@ -5,7 +5,7 @@ This repo builds two container images for use with `distrobox` on Bluefin + niri
 | Image | Base | Purpose |
 |-------|------|---------|
 | `udx-toolbox` | Arch (toolbx) | Daily-driver GUI apps: Storage Explorer, Obsidian, Legcord, Polypane, Bruno, LibreOffice, darktable |
-| `ubuntu-gui-toolbox` | Ubuntu 24.04 (pinned) | LocalSend — needs an older glibc than rolling Arch provides |
+| `ubuntu-gui-toolbox` | Ubuntu 24.04 (pinned) | LocalSend (pinned 1.18.2). Was split out because its binary was believed to need an older glibc than rolling Arch provides; that no longer reproduced on 2026-09-07 — see CLAUDE.md |
 | `playwright-toolbox` | Ubuntu (toolbx) | Playwright E2E testing with Chromium / Firefox / WebKit |
 
 Both are published to GHCR at `ghcr.io/<your-gh-user>/<image>:latest`.

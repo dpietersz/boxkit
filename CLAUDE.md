@@ -9,10 +9,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | Image | Base | Purpose |
 |---|---|---|
 | `ghcr.io/dpietersz/udx-toolbox` | Arch (`toolbx-images/arch-toolbox`) | Daily-driver GUI apps that have no acceptable Fedora source: Storage Explorer, Obsidian, Legcord, Polypane, Bruno, LibreOffice, darktable. Wayland/niri-tuned. NVIDIA-compatible via `distrobox create --nvidia` (the image is identical on Intel and NVIDIA — passthrough is host-side). |
-| `ghcr.io/dpietersz/ubuntu-gui-toolbox` | Ubuntu 24.04 (pinned, `toolbx/ubuntu-toolbox:24.04`) | GUI apps whose upstream binaries need an older glibc than rolling Arch provides. Ships **LocalSend**. NVIDIA passthrough deliberately OFF. |
+| `ghcr.io/dpietersz/ubuntu-gui-toolbox` | Ubuntu 24.04 (pinned, `toolbx/ubuntu-toolbox:24.04`) | GUI apps whose upstream binaries were believed to need an older glibc than rolling Arch provides. Ships **LocalSend** (pinned 1.18.2). NVIDIA passthrough deliberately OFF. ⚠️ The glibc premise did not reproduce on 2026-09-07 — see below. |
 | `ghcr.io/dpietersz/playwright-toolbox` | Ubuntu (`toolbx-images/ubuntu-toolbox`) | Playwright + Chromium/Firefox/WebKit for E2E testing. `setup-host-integration` exports `playwright*` to `~/.local/bin` on the host. |
 
-**The glibc floor (why `ubuntu-gui-toolbox` exists — don't collapse it back into `udx-toolbox`).** Some upstreams ship prebuilt GUI binaries against an Ubuntu LTS toolchain and rebuild rarely. LocalSend is the case in point: v1.17.0 (Feb 2025) is still the latest release, and on the rolling Arch base (now glibc 2.43) its Flutter/Dart VM fails to initialise — the GTK window and titlebar map, **nothing ever paints, and stderr stays completely empty**. It presents as an unusable black window with zero diagnostics, which is exactly why it burns hours: it looks like a GPU bug and isn't. This was tested and cleared against NVIDIA passthrough (black with zero NVIDIA libs), the GPU (black under llvmpipe, XWayland, Impeller off), the app config (black on a fresh profile), and the host image (darktable renders fine in the same Arch box). Only the glibc floor explains it — the identical binary works on Ubuntu 24.04 (glibc 2.39). If an Arch-hosted GUI app ever goes black-and-silent, suspect this first.
+**The glibc floor (why `ubuntu-gui-toolbox` exists — and why that reason is now UNVERIFIED).**
+
+*The original finding, kept because the diagnosis work was real:* LocalSend v1.17.0 shipped a Flutter binary built against an Ubuntu LTS toolchain, and on the rolling Arch base its Dart VM appeared to fail to initialise — the GTK window and titlebar mapped, **nothing ever painted, and stderr stayed completely empty**. It presented as an unusable black window with zero diagnostics, which is why it burned hours: it looks like a GPU bug. It was tested and cleared against NVIDIA passthrough, the GPU (llvmpipe, XWayland, Impeller off), the app config (fresh profile), and the host image (darktable rendered fine in the same Arch box). The glibc floor was the remaining explanation.
+
+⚠️ *Re-tested 2026-09-07 — it does not reproduce.* Both **v1.17.0 and v1.18.2** were run from the upstream `linux-x86-64.tar.gz` inside a fresh `udx-toolbox` Arch box (glibc **2.44**, `distrobox create --nvidia`, P14s Gen 5, niri/Wayland). **Both mapped a window and painted a full, working UI** — verified by screenshot, not by exit code. Neither produced a black window, and stderr was not empty in either case (both logged normally: server started on 53317, isolates ready). So the stated reason for this image is currently **unsupported by evidence**, and it is not known whether the original cause was fixed upstream, fixed in Arch, or misattributed at the time.
+
+Two premises behind the split are also simply dead: upstream **did** rebuild — v1.18.0, v1.18.1 and v1.18.2 (2026-08-21) all shipped after v1.17.0 — so "upstream hasn't rebuilt since Feb 2025" is no longer true.
+
+**What the re-test DID confirm** is a different, real trap: both versions fail to start on Arch with `error while loading shared libraries` unless the Ayatana tray libs are present — `libayatana-appindicator` for 1.17.0, and `libayatana-indicator` **as well** for 1.18.2. That is a hard dependency, not a glibc issue, and it produces a loud error rather than a silent black window.
+
+**Do not collapse `ubuntu-gui-toolbox` into `udx-toolbox` on the strength of that re-test alone** — one passing test on one machine is not proof the original failure is gone for good, and the `.deb`-installed-in-image path was not the thing tested (raw tarball binaries were). Treat collapsing the image as an open decision that needs its own deliberate test, not a cleanup.
 
 This repo is **the GUI-app delivery layer** of a three-repo personal ecosystem. Most "I want app X" requests do not belong here — read the next section before adding anything.
 
@@ -62,7 +72,7 @@ A request "I want app X" routes as:
 - **Needs sudo / reboot / system integration** → `bluefin-udx`
 - **Fedora RPM exists OR clean brew/mise package** → dotfiles
 - **GUI app with no Fedora RPM (and Flatpak/AppImage rejected)** → here, in `udx-toolbox`, AND add it to the discover-then-assert block in `scripts/udx-toolbox.sh` so it lands in `/etc/distrobox-export.list`
-- **…and that app ships a prebuilt binary that breaks on rolling Arch** (black/silent window, unresolved libs, glibc complaints) → `ubuntu-gui-toolbox` instead, via its upstream `.deb`. Same export-list contract.
+- **…and that app ships a prebuilt binary that breaks on rolling Arch** (black/silent window, unresolved libs, glibc complaints) → `ubuntu-gui-toolbox` instead, via its upstream `.deb`. Same export-list contract. Confirm the breakage by *running it and looking at the window* before routing it here — the one app that lives here for this reason no longer reproduces its own symptom.
 
 ### Cross-repo authoritative docs
 
@@ -76,7 +86,7 @@ A request "I want app X" routes as:
 ```
 ContainerFiles/         # One Dockerfile per image — name MUST equal the image name
   udx-toolbox           # FROM arch-toolbox, COPYs scripts/udx-toolbox.sh + packages
-  ubuntu-gui-toolbox    # FROM ubuntu-toolbox:24.04 (PINNED — glibc floor)
+  ubuntu-gui-toolbox    # FROM ubuntu-toolbox:24.04 (PINNED — glibc floor, now unverified)
   playwright-toolbox    # FROM ubuntu-toolbox
 scripts/                # Build-time setup scripts (run inside the image)
   distrobox-shims.sh    # MUST be called first by every image script — sets up host
@@ -84,8 +94,9 @@ scripts/                # Build-time setup scripts (run inside the image)
   udx-toolbox.sh        # Installs pacman + AUR packages, then the discover-then-assert
                         #   block that writes /etc/distrobox-export.list (read by dotfiles)
   ubuntu-gui-toolbox.sh # LocalSend from upstream .deb + discover-then-assert export list.
-                        #   Exists because of the glibc floor (see above) — not for new
-                        #   apps that build fine on Arch.
+                        #   LOCALSEND_VERSION is a hard pin — it will never update
+                        #   itself. Re-check it when you touch this file; it sat 3
+                        #   releases stale until 2026-09-07.
   playwright-toolbox.sh # Node 22 + playwright install + setup-host-integration shim
   decommission-ghcr.sh  # One-shot: wipe legacy GHCR packages
 packages/

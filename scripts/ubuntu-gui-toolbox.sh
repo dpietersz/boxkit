@@ -42,7 +42,28 @@ apt-get upgrade -y
 # ─── LocalSend ──────────────────────────────────────────────────────────────
 # Pin the version explicitly: the .deb URL is content-addressed by tag, and an
 # unpinned "latest" fetch would silently change what ships in the image.
-LOCALSEND_VERSION="1.17.0"
+#
+# A pin is the right call here, but it has a cost the repo learned the hard
+# way: a pin never moves on its own, so nothing in the weekly rebuild can tell
+# you it went stale. This one sat at 1.17.0 while upstream shipped 1.18.0,
+# 1.18.1 and 1.18.2 — found 2026-09-07 only because we went looking.
+#
+# So: when bumping, record the date you checked. Check with
+#   curl -fsSI -o /dev/null -w '%{url_effective}\n' -L \
+#     https://github.com/localsend/localsend/releases/latest
+# Last checked 2026-09-07 → v1.18.2 (released 2026-08-21).
+#
+# ⚠️ CROSS-REPO: bumping this can move the app's config directory. Flutter
+# derives it from the application ID, and upstream's .deb has changed it BETWEEN
+# releases — 1.17.0 wrote ~/.local/share/localsend_app, 1.18.2 writes
+# ~/.local/share/org.localsend.localsend_app. dotfiles'
+# run_onchange_after_17-configure-localsend.sh.tmpl hardcodes that path and
+# migrates identity + transfer history across, so a bump here needs a matching
+# change THERE or the user silently gets a new device identity and empty
+# history. Verify by running the new .deb with XDG_DATA_HOME pointed at an empty
+# directory and seeing which directory it creates — the app ID string inside the
+# binary is the SAME in both builds and does not tell you.
+LOCALSEND_VERSION="1.18.2"
 LOCALSEND_DEB="LocalSend-${LOCALSEND_VERSION}-linux-x86-64.deb"
 LOCALSEND_URL="https://github.com/localsend/localsend/releases/download/v${LOCALSEND_VERSION}/${LOCALSEND_DEB}"
 
@@ -61,6 +82,19 @@ apt-get install -y ca-certificates curl
 # the ELF's DT_NEEDED. The ldd assertion at the bottom of this script is the
 # backstop if upstream ever changes this again.
 apt-get install -y libayatana-appindicator3-1 gir1.2-ayatanaappindicator3-0.1
+
+# libgles2 — required from LocalSend 1.18.x onward, and NOT declared by the .deb.
+# The newer Flutter engine dlopen()s libGLESv2.so.2 at startup; the Ubuntu 24.04
+# toolbox base does not ship it. Without this the app aborts immediately with
+#     Couldn't open libGLESv2.so.2: ... cannot open shared object file
+# and never draws a window.
+#
+# This is exactly the failure the `ldd` gate at the bottom CANNOT see: a dlopen'd
+# library is not a DT_NEEDED entry, so `ldd` reports the binary as linking
+# cleanly while the app is still dead on arrival. Found 2026-09-07 by actually
+# running the 1.18.2 binary in the real box — the 1.18.2 image built green and
+# passed every existing gate first. Hence the explicit ldconfig assertion below.
+apt-get install -y libgles2 libegl1
 
 # 3-retry loop — network flakiness is the default assumption for remote fetches.
 cd /tmp
@@ -189,6 +223,20 @@ if ldd "$LOCALSEND_REAL" 2>/dev/null | grep -q "not found"; then
   exit 1
 fi
 echo "  ok: $LOCALSEND_REAL exists and links cleanly"
+
+# Runtime-loaded library gate. `ldd` above only proves DT_NEEDED entries resolve.
+# The Flutter engine ALSO dlopen()s its GL stack at startup, which ldd cannot
+# see — so assert those separately or a green build ships an app that aborts on
+# launch. Add to this list any library that only shows up in a runtime error.
+for runtime_lib in libGLESv2.so.2 libEGL.so.1; do
+  if ! ldconfig -p | grep -q "$runtime_lib"; then
+    echo "ASSERT FAIL: $runtime_lib not present — LocalSend dlopen()s it at startup"
+    echo "             and will abort before drawing a window. Install the package"
+    echo "             that provides it (libgles2 / libglvnd0) above."
+    exit 1
+  fi
+  echo "  ok: $runtime_lib present for dlopen"
+done
 
 # Clean up apt caches to keep the image small
 apt-get clean

@@ -94,7 +94,7 @@ This repository ships three CI-published toolbox images (pulled from GHCR). See 
 |-------|------|----------|-------------|
 | `udx-toolbox` | Arch | GHCR (CI) | Daily-driver GUI apps: Storage Explorer, Obsidian, Legcord, Polypane, Bruno, LibreOffice, darktable. (LocalSend lives in `ubuntu-gui-toolbox`; Anytype + Ferdium removed 2026-07-13.) Wayland/niri-ready, NVIDIA-compatible via `distrobox create --nvidia`. |
 | `playwright-toolbox` | Ubuntu | GHCR (CI) | Playwright with full Chromium, Chromium headless shell, Firefox, and WebKit for E2E testing. |
-| `ubuntu-gui-toolbox` | Ubuntu 24.04 | GHCR (CI) | GUI apps whose prebuilt binaries need a stable glibc rather than rolling Arch — currently LocalSend. Same `/etc/distrobox-export.list` contract as `udx-toolbox`. |
+| `ubuntu-gui-toolbox` | Ubuntu 24.04 | GHCR (CI) | GUI apps whose prebuilt binaries were believed to need a stable glibc rather than rolling Arch — currently LocalSend (pinned 1.18.2). Same `/etc/distrobox-export.list` contract as `udx-toolbox`. The glibc premise did not reproduce on 2026-09-07; see CLAUDE.md. |
 
 ## Using the custom images
 
