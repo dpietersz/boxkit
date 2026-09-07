@@ -104,31 +104,117 @@ pacman -S --noconfirm darktable ocl-icd
 # [extra] turns a 9-minute image build into a multi-hour Chromium compile, silently.
 # If a build ever starts taking hours, check for a source-built electron first.
 # legcord-bin pins electron41, which IS in [extra] — that one is fine.
-yay_install storageexplorer
 yay_install legcord-bin
 yay_install polypane
 yay_install bruno-bin
 
+# ─── Azure Storage Explorer (upstream tarball — deliberately NOT the AUR) ───
+# Was `yay_install storageexplorer` until 2026-09-07. Dropped because the AUR
+# package is hand-updated and had gone stale: Microsoft shipped v1.46.0 on
+# 2026-08-31 while `storageexplorer` still sat at 1.45.0-2 (last touched
+# 2026-08-18, and never flagged out-of-date by anyone). The weekly rebuild
+# worked perfectly and still shipped an old app, because the staleness lived
+# one hop UPSTREAM of this repo where nothing here could see or fix it.
+#
+# The PKGBUILD did nothing we cannot do directly: it unpacks the upstream
+# tarball flat into /opt/StorageExplorer, symlinks the binary into /usr/bin,
+# and installs a hand-written .desktop. Its only real dependency is
+# dotnet-runtime, a first-class Arch [extra] package. So we own those three
+# steps here and "latest" now genuinely means latest.
+#
+# Cost of owning it: if Microsoft ever changes the tarball layout, this build
+# breaks instead of silently shipping something broken. That is the intended
+# trade — hence the assert gate below.
+pacman -S --noconfirm dotnet-runtime
+
+# Resolve the newest release tag via the /releases/latest HTTP redirect rather
+# than the GitHub REST API. The API is rate-limited to 60 req/h per IP for
+# unauthenticated callers and Actions runners share egress IPs, so the API
+# would fail intermittently in CI for reasons unrelated to this repo. The
+# redirect has no such limit.
+SE_TAG=$(curl -fsSI -o /dev/null -w '%{url_effective}' -L \
+  https://github.com/microsoft/AzureStorageExplorer/releases/latest \
+  | sed 's|.*/tag/||')
+case "$SE_TAG" in
+  v[0-9]*) ;;
+  *)
+    echo "ERROR: could not resolve a Storage Explorer release tag (got '$SE_TAG')"
+    exit 1
+    ;;
+esac
+echo "INFO: installing Azure Storage Explorer $SE_TAG from the upstream tarball"
+
+SE_URL="https://github.com/microsoft/AzureStorageExplorer/releases/download/${SE_TAG}/StorageExplorer-linux-x64.tar.gz"
+
+# Download to a file first, then extract. Piping curl into tar would mask a
+# failed download as a tar error and hides curl's exit status behind tar's.
+# The tarball is ~430 MB but never reaches a layer: the whole script runs in
+# one RUN, and we delete it below.
+se_ok=no
+for i in 1 2 3; do
+  if curl -fsSL -o /tmp/storageexplorer.tar.gz "$SE_URL"; then
+    se_ok=yes
+    break
+  fi
+  echo "Storage Explorer download attempt $i failed, retrying..."
+  sleep 3
+done
+[ "$se_ok" = yes ] || { echo "ERROR: failed to download Storage Explorer after 3 attempts"; exit 1; }
+
+# The tarball extracts FLAT (no top-level directory), so extract straight into
+# the target dir — same layout the PKGBUILD's package() assumed.
+rm -rf /opt/StorageExplorer
+mkdir -p /opt/StorageExplorer
+tar xzf /tmp/storageexplorer.tar.gz -C /opt/StorageExplorer
+rm -f /tmp/storageexplorer.tar.gz
+
+# Assert gate: the two paths the .desktop below hard-codes must exist. Without
+# this, an upstream layout change would produce an image whose launcher points
+# at nothing, and the failure would only show up on Dimitri's laptop.
+for se_path in StorageExplorer resources/app/out/app/icon.png; do
+  if [ ! -e "/opt/StorageExplorer/$se_path" ]; then
+    echo "ASSERT FAIL: /opt/StorageExplorer/$se_path missing — upstream tarball layout changed"
+    exit 1
+  fi
+done
+echo "INFO: Storage Explorer version $(sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' /opt/StorageExplorer/resources/app/package.json | head -1)"
+
 # ─── storageexplorer host-export workaround ─────────────────────────────────
 # distrobox-export --app <name> uses a CASE-SENSITIVE grep against Exec= and
-# Name= in each .desktop file to find the entry. The storageexplorer AUR
-# package installs:
-#   Exec=env DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1 StorageExplorer ...
+# Name= in each .desktop file to find the entry. Upstream's own naming is
+# mixed-case:
+#   Exec=env DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1 StorageExplorer
 #   Name=Microsoft Azure Storage Explorer
 # Neither line contains the literal "storageexplorer" (lowercase), so
 # `distrobox-export --app storageexplorer` — what dotfiles' init_hook calls
 # based on the .desktop *filename* — fails with "cannot find any desktop
-# files". The other 7 apps work because their binary basename is already
+# files". The other apps work because their binary basename is already
 # lowercase and appears in Exec=.
 #
 # Fix: add a lowercase symlink so `env ... storageexplorer` resolves to the
-# real binary, then rewrite the Exec= line below to use that lowercase
-# binary. The .desktop now contains the literal "storageexplorer", matching
-# distrobox-export's grep. Functionality is unchanged.
+# real binary, then write the Exec= line using that lowercase name. Because we
+# now author the .desktop ourselves, this is written correctly up front rather
+# than sed-patched afterwards. Path= and Icon= still use the real
+# /opt/StorageExplorer (mixed case) filesystem path.
+ln -sf /opt/StorageExplorer/StorageExplorer /usr/bin/StorageExplorer
+ln -sf /opt/StorageExplorer/StorageExplorerExe /usr/bin/StorageExplorerExe
 ln -sf /opt/StorageExplorer/StorageExplorer /usr/bin/storageexplorer
-# Only rewrite the binary token on the Exec= line — Path= and Icon= still
-# need the real /opt/StorageExplorer (mixed case) filesystem path.
-sed -i -E '/^Exec=/ s/( )StorageExplorer( |$)/\1storageexplorer\2/' /usr/share/applications/storageexplorer.desktop
+
+# DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1 works around an ICU version mismatch
+# between the bundled .NET and rolling Arch's icu. Carried over from the AUR
+# .desktop; removing it makes the app fail to start.
+cat > /usr/share/applications/storageexplorer.desktop <<'SEDESKTOP'
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Microsoft Azure Storage Explorer
+Comment=Microsoft Azure Storage Explorer is a standalone app from Microsoft that allows you to easily work with Azure Storage data on Windows, macOS and Linux.
+Path=/opt/StorageExplorer
+Exec=env DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1 storageexplorer
+Icon=/opt/StorageExplorer/resources/app/out/app/icon.png
+Terminal=false
+Categories=Development;Network;
+SEDESKTOP
 
 # ─── libreoffice host-export workaround ─────────────────────────────────────
 # Same case-sensitive-grep trap as storageexplorer. LibreOffice's .desktop
@@ -315,7 +401,11 @@ apply_host_env_vars() {
 # LocalSend is Flutter/GTK, not Chromium, so the Ozone flags below were never
 # valid for it. It now ships from ubuntu-gui-toolbox instead — see above.
 # anytype-bin and ferdium-bin removed 2026-07-13 (unused; ferdium also broke CI).
-ELECTRON_PACKAGES="obsidian legcord-bin polypane bruno-bin storageexplorer"
+# storageexplorer is NOT listed here: it is installed from the upstream tarball
+# above, so `pacman -Ql storageexplorer` finds nothing and discover_and_register
+# would hard-fail. It is registered explicitly further down, the same way
+# darktable is — but WITH Wayland flags, because it IS an Electron app.
+ELECTRON_PACKAGES="obsidian legcord-bin polypane bruno-bin"
 NATIVE_PACKAGES="libreoffice-fresh"
 
 # Discovered .desktop basenames in this list are omitted from the export
@@ -361,6 +451,19 @@ done
 for pkg in $NATIVE_PACKAGES; do
   discover_and_register "$pkg" "no"
 done
+
+# ─── storageexplorer export-list registration (installed outside pacman) ────
+# Same explicit-registration pattern as darktable below, for a different
+# reason: darktable is opted out of auto-discovery because its basename is
+# reverse-DNS; storageexplorer is opted out because pacman does not own it at
+# all. Electron app → Wayland/Ozone flags DO apply here.
+if [ ! -f /usr/share/applications/storageexplorer.desktop ]; then
+  echo "ERROR: storageexplorer.desktop not found — tarball install did not complete"
+  exit 1
+fi
+apply_wayland_flags /usr/share/applications/storageexplorer.desktop
+apply_host_env_vars /usr/share/applications/storageexplorer.desktop
+echo storageexplorer >> "$EXPORT_LIST_TMP"
 
 # ─── darktable export-list registration (reverse-DNS .desktop trap) ─────────
 # darktable ships /usr/share/applications/org.darktable.darktable.desktop with
