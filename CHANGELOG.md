@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.14](https://github.com/dpietersz/boxkit/compare/v2.3.13...v2.3.14) (2026-09-07)
+
+
+### Bug Fixes
+
+* **udx-toolbox:** drop Path= from the Storage Explorer .desktop ([d8711a7](https://github.com/dpietersz/boxkit/commit/d8711a7ea98ab5953e9b67496c5463d160d1e6f3))
+
 ## [2.3.13](https://github.com/dpietersz/boxkit/compare/v2.3.12...v2.3.13) (2026-09-07)
 
 
