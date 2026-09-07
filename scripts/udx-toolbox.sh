@@ -200,6 +200,15 @@ ln -sf /opt/StorageExplorer/StorageExplorer /usr/bin/StorageExplorer
 ln -sf /opt/StorageExplorer/StorageExplorerExe /usr/bin/StorageExplorerExe
 ln -sf /opt/StorageExplorer/StorageExplorer /usr/bin/storageexplorer
 
+# NO Path= line, deliberately. The AUR .desktop carried `Path=/opt/StorageExplorer`
+# and it is actively harmful once exported: distrobox-export copies the entry to
+# the HOST, where the launcher chdir()s BEFORE running distrobox-enter. /opt/
+# StorageExplorer only exists inside the container, so the host launcher aborts
+# with "Failed to change to directory" and the app never starts — while running
+# the same Exec by hand works fine, which makes it look like a launcher bug.
+# Storage Explorer does not need that cwd (verified by running it from $HOME).
+# The assert gate further down rejects any Path= in an exported .desktop.
+#
 # DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1 works around an ICU version mismatch
 # between the bundled .NET and rolling Arch's icu. Carried over from the AUR
 # .desktop; removing it makes the app fail to start.
@@ -209,7 +218,6 @@ Type=Application
 Version=1.0
 Name=Microsoft Azure Storage Explorer
 Comment=Microsoft Azure Storage Explorer is a standalone app from Microsoft that allows you to easily work with Azure Storage data on Windows, macOS and Linux.
-Path=/opt/StorageExplorer
 Exec=env DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1 storageexplorer
 Icon=/opt/StorageExplorer/resources/app/out/app/icon.png
 Terminal=false
@@ -496,6 +504,19 @@ while IFS= read -r app; do
   [ -z "$app" ] && continue
   if [ ! -f "/usr/share/applications/${app}.desktop" ]; then
     echo "ASSERT FAIL: /usr/share/applications/${app}.desktop missing for list entry '$app'"
+    exit 1
+  fi
+  # Path= is fatal for an exported entry. distrobox-export copies the .desktop to
+  # the host, and the host launcher chdir()s to Path= before exec'ing
+  # distrobox-enter. Any container-only directory there makes the launcher fail
+  # silently-ish ("Failed to change to directory") while a hand-run Exec still
+  # works — a confusing split that cost a debugging session on 2026-09-07.
+  if grep -q "^Path=" "/usr/share/applications/${app}.desktop"; then
+    echo "ASSERT FAIL: ${app}.desktop has a Path= line:"
+    grep "^Path=" "/usr/share/applications/${app}.desktop"
+    echo "             Exported entries run on the HOST, which cannot chdir into a"
+    echo "             container-only directory. Remove Path= or the app will not"
+    echo "             start from the host launcher."
     exit 1
   fi
   echo "  ok: $app"
