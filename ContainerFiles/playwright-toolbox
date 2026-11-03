@@ -1,5 +1,9 @@
 FROM quay.io/toolbx/ubuntu-toolbox:latest
 
+# Direct Node/MCP processes do not source /etc/profile.d/playwright.sh.
+# Use the image's pre-installed browsers even with a fresh user HOME.
+ENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers
+
 LABEL com.github.containers.toolbox="true" \
       usage="This image is meant to be used with the toolbox or distrobox command" \
       summary="A Playwright testing Ubuntu toolbox with pre-installed browsers (Chromium, Firefox, WebKit) for end-to-end testing, designed for Bluefin Linux" \
