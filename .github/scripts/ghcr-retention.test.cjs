@@ -1,4 +1,4 @@
-// Run: node --test .github/scripts/
+// Run: node --test .github/scripts/ghcr-retention.test.cjs
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const { planRetention } = require("./ghcr-retention.cjs");

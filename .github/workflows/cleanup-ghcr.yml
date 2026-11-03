@@ -29,7 +29,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1 (Node 24)
 
       - name: Test retention logic
-        run: node --test .github/scripts/
+        run: node --test .github/scripts/ghcr-retention.test.cjs
 
       # Retention counts images, not raw package versions: each release also
       # pushes a cosign .sig version. See .github/scripts/ghcr-retention.cjs.
