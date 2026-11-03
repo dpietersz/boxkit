@@ -1,0 +1,296 @@
+#!/usr/bin/env bash
+# Shellcheck shell=bash
+
+set -euo pipefail
+
+readonly INSTALLER_SHA256="c609ae25c7fecde0190845bef392279da2cb84240740c383386fc2dbf1b3f967"
+readonly WINE_BIN_DIR="${INSTA360_WINE_BIN_DIR:-/opt/wine-stable/bin}"
+
+PREFIX=""
+
+usage() {
+  cat <<'EOF'
+Usage:
+  insta360-studio --setup
+  insta360-studio --install /absolute/path/to/Insta360_Studio_6.0.5.exe
+  insta360-studio [Studio arguments]
+
+The installer is supplied by the user and must have the approved Studio 6.0.5
+SHA-256. Use -- before Studio arguments that begin with a dash.
+EOF
+}
+
+error() {
+  printf 'insta360-studio: %s\n' "$*" >&2
+}
+
+current_uid() {
+  /usr/bin/id -u
+}
+
+require_non_root() {
+  if [[ "$(current_uid)" == "0" ]]; then
+    error "refusing to run Wine as root; run this command as the toolbox user."
+    exit 1
+  fi
+}
+
+show_gui_error() {
+  local message=$1
+  if [[ -n "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ]] && command -v zenity >/dev/null 2>&1; then
+    zenity --error --title="Insta360 Studio" --text="$message" >/dev/null 2>&1 || true
+  fi
+}
+
+wine() {
+  # Keep the mutation/launch lock in this wrapper, not inherited by wineserver.
+  command wine "$@" 9>&-
+}
+
+prepare_environment() {
+  export WINEPREFIX="$PREFIX" WINEARCH=win64
+  export PATH="$WINE_BIN_DIR:$PATH"
+  # Studio recreates QuickLook's Run entry and starts its daemon itself.
+  # Removing autostart alone is insufficient; disable ONLY the optional helpers.
+  export WINEDLLOVERRIDES='winemenubuilder.exe,quick-look.exe,quick-look-daemon.exe=d'
+  unset QT_SCALE_FACTOR QT_SCREEN_SCALE_FACTORS QT_AUTO_SCREEN_SCALE_FACTOR QT_FONT_DPI
+  export QT_ENABLE_HIGHDPI_SCALING=0
+}
+
+disable_quicklook_run() {
+  # `reg` does not invoke the Run key.  Delete only this optional helper; do
+  # not touch Explorer, other startup items, or processes outside this prefix.
+  wine reg delete 'HKCU\Software\Microsoft\Windows\CurrentVersion\Run' \
+    /v 'Studio.QuickLook' /f >/dev/null 2>&1 || true
+}
+
+configure_d_mapping() {
+  local mapping="$PREFIX/dosdevices/d:"
+  local expected actual
+
+  [[ -d "$HOME/dev" ]] || {
+    error "required media directory does not exist: $HOME/dev"
+    return 1
+  }
+  mkdir -p "$PREFIX/dosdevices"
+  expected=$(readlink -f -- "$HOME/dev")
+
+  if [[ -L "$mapping" ]]; then
+    actual=$(readlink -f -- "$mapping" 2>/dev/null || true)
+    if [[ "$actual" == "$expected" ]]; then
+      return 0
+    fi
+    error "refusing to replace existing D: mapping ($mapping -> $(readlink -- "$mapping")); expected $expected"
+    return 1
+  fi
+  if [[ -e "$mapping" ]]; then
+    error "refusing to replace non-symlink D: mapping: $mapping"
+    return 1
+  fi
+  ln -s -- "$expected" "$mapping"
+}
+
+configure_prefix() {
+  local new_prefix=0
+  if [[ ! -d "$PREFIX/drive_c" ]]; then
+    new_prefix=1
+  fi
+
+  mkdir -p "$PREFIX"
+  # Explicit initialization only; never run wineboot -u on ordinary launches.
+  if [[ "$new_prefix" -eq 1 ]]; then
+    # Studio is native Qt/C++; avoid unrelated Mono/Gecko download dialogs
+    # during prefix creation. This override is initialization-only.
+    WINEDLLOVERRIDES="$WINEDLLOVERRIDES;mscoree,mshtml=d" wineboot -i 9>&-
+  fi
+  disable_quicklook_run
+  winecfg -v win11 9>&-
+  wine reg add 'HKCU\Software\Wine\Drivers' /v Graphics /t REG_SZ /d x11 /f
+  wine reg add 'HKCU\Control Panel\Desktop' /v LogPixels /t REG_DWORD /d 144 /f
+  configure_d_mapping
+  touch "$PREFIX/.boxkit-config-v1"
+}
+
+lock_prefix() {
+  mkdir -p "$(dirname -- "$PREFIX")"
+  exec 9>"${PREFIX}.lock"
+  if ! flock -n 9; then
+    error "Studio or another setup/install is already using this Wine prefix"
+    show_gui_error "Studio or setup is already running. Close it before starting another installation or session."
+    exit 1
+  fi
+}
+
+studio_executable() {
+  local candidate
+  for candidate in \
+    "$PREFIX/drive_c/Program Files/Insta360 Studio/Insta360 Studio.exe" \
+    "$PREFIX/drive_c/Program Files/Insta360 Studio 2025/Insta360 Studio.exe"; do
+    if [[ -f "$candidate" ]]; then
+      printf '%s\n' "$candidate"
+      return 0
+    fi
+  done
+  return 1
+}
+
+configure_nvidia_vulkan() {
+  local device="${INSTA360_NVIDIA_DEVICE:-/dev/nvidiactl}"
+  local dirs="${INSTA360_VULKAN_ICD_DIRS:-/etc/vulkan/icd.d:/usr/share/vulkan/icd.d}"
+  local dir manifest output
+  local -a icd_dirs
+
+  # Do nothing on Mesa-only containers. In particular, never point Vulkan at a
+  # non-existent NVIDIA manifest; Mesa's normal loader discovery remains intact.
+  [[ -e "$device" ]] || return 0
+
+  IFS=: read -r -a icd_dirs <<< "$dirs"
+  for dir in "${icd_dirs[@]}"; do
+    [[ -d "$dir" ]] || continue
+    for manifest in "$dir"/*nvidia*.json; do
+      [[ -f "$manifest" ]] || continue
+      output="$PREFIX/vulkan/$(basename -- "$manifest")"
+      mkdir -p "$(dirname -- "$output")"
+      # Fedora's injected JSON commonly names /usr/lib64/libGLX_nvidia.so.0,
+      # which is absent in Ubuntu. Copy only into this prefix and replace that
+      # path with a real Ubuntu library path (or a dlopen-verified soname).
+      local manifest_mode
+      if manifest_mode=$(python3 - "$manifest" "$output" <<'PY'
+import ctypes
+import json
+import os
+import sys
+
+source, destination = sys.argv[1:]
+with open(source, encoding="utf-8") as file:
+    manifest = json.load(file)
+library = manifest.get("ICD", {}).get("library_path")
+if not isinstance(library, str):
+    raise SystemExit(1)
+# The 64-bit Python loader validates architecture AND dependent libraries.
+# Never choose the first filesystem match: i386 libraries coexist here.
+try:
+    ctypes.CDLL(library)
+    print("system")
+    raise SystemExit(0)
+except OSError:
+    pass
+replacement = os.path.basename(library)
+try:
+    ctypes.CDLL(replacement)
+except OSError:
+    raise SystemExit(1)
+manifest["ICD"]["library_path"] = replacement
+with open(destination, "w", encoding="utf-8") as file:
+    json.dump(manifest, file)
+    file.write("\n")
+print("repair")
+PY
+      ); then
+        # PRIME/GLX are enabled only after both a device and a loadable NVIDIA
+        # ICD have been proven present in this container.
+        export __NV_PRIME_RENDER_OFFLOAD=1
+        export __GLX_VENDOR_LIBRARY_NAME=nvidia
+        export __VK_LAYER_NV_optimus=NVIDIA_only
+        if [[ "$manifest_mode" == "repair" ]]; then
+          export VK_DRIVER_FILES="$output"
+        else
+          export VK_DRIVER_FILES="$manifest"
+        fi
+        return 0
+      fi
+      rm -f -- "$output"
+    done
+  done
+}
+
+run_installer() {
+  local installer=$1 actual_hash
+  [[ "$installer" = /* ]] || {
+    error "--install requires an absolute installer path"
+    return 1
+  }
+  [[ -f "$installer" && -r "$installer" ]] || {
+    error "installer not found or unreadable: $installer"
+    return 1
+  }
+  actual_hash=$(sha256sum -- "$installer" | awk '{print $1}')
+  if [[ "$actual_hash" != "$INSTALLER_SHA256" ]]; then
+    error "installer SHA-256 does not match the approved Studio 6.0.5 release"
+    return 1
+  fi
+
+  lock_prefix
+  configure_prefix
+  configure_nvidia_vulkan
+  # Do not use unattended or EULA-accepting flags. /NORESTART is supported by
+  # the installer and only prevents a Windows restart request. Apply cleanup
+  # even if setup is cancelled or fails, preserving its original exit status.
+  local status=0
+  wine "$installer" /NORESTART || status=$?
+  disable_quicklook_run
+  wine taskkill /IM quick-look-daemon.exe /F >/dev/null 2>&1 || true
+  wine taskkill /IM quick-look.exe /F >/dev/null 2>&1 || true
+  return "$status"
+}
+
+run_studio() {
+  local executable
+  executable=$(studio_executable) || {
+    local message="Insta360 Studio is not installed. Run: insta360-studio --install /absolute/path/to/Insta360_Studio_6.0.5.exe"
+    error "$message"
+    show_gui_error "$message"
+    return 1
+  }
+  lock_prefix
+  if [[ ! -f "$PREFIX/.boxkit-config-v1" ]]; then
+    configure_prefix
+  else
+    configure_d_mapping
+  fi
+  configure_nvidia_vulkan
+  wine "$executable" "$@"
+}
+
+main() {
+  local installer=""
+
+  if [[ "${1:-}" == "--help" ]]; then
+    [[ "$#" -eq 1 ]] || { error "--help does not accept additional arguments"; return 2; }
+    usage
+    return 0
+  fi
+  require_non_root
+  PREFIX="${XDG_DATA_HOME:-$HOME/.local/share}/insta360-studio/prefix"
+  [[ "$PREFIX" = /* ]] || { error "XDG_DATA_HOME must be absolute"; return 1; }
+  prepare_environment
+
+  case "${1:-}" in
+    --setup)
+      [[ "$#" -eq 1 ]] || { error "--setup does not accept additional arguments"; usage >&2; return 2; }
+      lock_prefix
+      configure_prefix
+      ;;
+    --install)
+      [[ "$#" -eq 2 ]] || { error "--install requires exactly one installer path"; usage >&2; return 2; }
+      installer=$2
+      run_installer "$installer"
+      ;;
+    --)
+      shift
+      run_studio "$@"
+      ;;
+    --*)
+      error "unknown launcher option: $1"
+      usage >&2
+      return 2
+      ;;
+    *)
+      run_studio "$@"
+      ;;
+  esac
+}
+
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+  main "$@"
+fi

@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Insta360 Studio — GO 3S local Distrobox trial</title>
+  <meta name="doc-template" content="implementation-plan">
+  <meta name="diataxis" content="how-to, reference">
+  <meta name="doc-status" content="in-progress">
+  <meta name="audience" content="BoxKit maintainer and implementation agent">
+  <meta name="generated-by" content="pi html-docs skill">
+  <script type="application/json" id="html-docs-metadata">{"template":"implementation-plan","diataxis":["how-to","reference"],"status":"in-progress","visuals":["inline environment map","phase gate table"]}</script>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <style type="text/tailwindcss">
+    @layer components {
+      .panel { @apply rounded-2xl border border-slate-700 bg-slate-900 p-6 my-6; }
+      h2 { @apply text-2xl font-semibold text-cyan-300 mb-4; }
+      h3 { @apply text-lg font-semibold text-slate-100 mt-5 mb-2; }
+      p, li { @apply leading-7 text-slate-200; }
+      ul { @apply list-disc pl-6 space-y-2; }
+      ol { @apply list-decimal pl-6 space-y-2; }
+      a { @apply text-cyan-300 underline underline-offset-4; }
+      code { @apply text-amber-200 text-sm break-words; }
+      pre { @apply overflow-x-auto bg-slate-950 rounded-lg p-4 my-3; }
+      th, td { @apply p-3 border-b border-slate-700 text-left align-top; }
+      th { @apply text-cyan-300; }
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100">
+<main class="max-w-5xl mx-auto px-5 py-10">
+<article>
+  <header class="panel">
+    <p class="uppercase tracking-widest text-cyan-300">Implementation plan · local experiment · 17 September 2026</p>
+    <h1 class="text-4xl font-bold my-4">Insta360 Studio for GO 3S</h1>
+    <p>Started as a bounded local trial on the Bluefin P14s. After confirming Studio works, the user requested BoxKit and dotfiles adoption. Packaging is now authorized; independently documented FreeFrame exports and hardware encoding remain separate, incomplete acceptance checks.</p>
+    <figure class="mt-6" aria-label="Existing camera import feeds copied test media into a new Ubuntu Wine container; successful exports precede future BoxKit adoption.">
+      <div class="grid gap-3 md:grid-cols-3">
+        <div class="rounded-lg bg-slate-800 p-4"><strong>Already works</strong><p>GO 3S → Super+Ctrl+I → verified original files</p></div>
+        <div class="rounded-lg bg-cyan-950 p-4"><strong>Local trial</strong><p>Ubuntu 24.04 → Wine → Studio → test exports</p></div>
+        <div class="rounded-lg bg-slate-800 p-4"><strong>User-approved adoption</strong><p>Runtime image → persistent user prefix → dotfiles launcher</p></div>
+      </div>
+      <figcaption class="text-sm text-slate-400 mt-3">Dependency isolation, not a security sandbox. Host driver and original media remain outside the image.</figcaption>
+    </figure>
+  </header>
+  <nav class="flex flex-wrap gap-4" aria-label="Contents"><a href="#status">Status</a><a href="#scope">Scope</a><a href="#phases">Phases</a><a href="#validation">Acceptance</a><a href="#runbook">Runbook</a><a href="#adoption">BoxKit adoption</a><a href="#rollback">Rollback</a><a href="#sources">Evidence</a></nav>
+
+  <section id="status" class="panel">
+    <h2>Live status &amp; handoff</h2>
+    <p id="current-status"><strong>Studio 6.0.5 launches with usable 150% scaling under Wine 11.0.</strong> User confirmed scaling is better. Working settings: prefix LogPixels=144 and Studio-only QT_ENABLE_HIGHDPI_SCALING=0. QuickLook tray helper was stopped and its Wine autostart removed; final testing found Studio recreates it, so the image launcher now blocks both optional QuickLook executables. Host ~/dev is accessible in the container and mapped as Wine D:. User subsequently confirmed Studio works and requested final packaging. BoxKit/dotfiles changes are implemented; local build, launcher tests and cold-start GUI/QuickLook checks passed. No push or global chezmoi apply. Media/export validation remains pending.</p>
+    <ul id="results">
+      <li>Read-only preflight: Core Ultra 7 155H, 62 GiB RAM, Intel Arc plus NVIDIA RTX 500 Ada Laptop (4094 MiB), NVIDIA driver 610.57.04.</li>
+      <li>Distrobox 1.8.2.5; Podman 5.8.4; NVIDIA CDI devices present; niri/Wayland with DISPLAY=:0 and Xwayland installed.</li>
+      <li>Initially 133 GiB free; after Studio setup approximately 123 GiB free (94% full). Trial home/logs/prefixes: 6.0 GiB, plus container layers. Trial budget: approximately 15 GiB before review; preserve at least 100 GiB free. Container apt cache cleaned; no Podman pruning.</li>
+      <li>Existing containers: ubuntu-gui-toolbox, udx-toolbox, playwright. Do not modify them.</li>
+      <li>Importer preserves bytes and verifies SHA-256. Default albums: <code>~/dev/Pictures/albums/YYYY/YYYYMM_&lt;slug&gt;</code>. Deployed <code>Mod+Ctrl+I</code> launches <code>insta360-import-ui</code>.</li>
+    </ul>
+    <h3>Next action</h3>
+    <p id="next-action">Review/release BoxKit before deploying the new dotfiles on other machines. Final local cold start passed; Studio is left open. Studio import path remains <code>D:\Pictures</code> (host <code>~/dev/Pictures</code>). Request normal and FreeFrame clips for independently verified export tests; use copies and separate exports. Trial launcher remains available for rollback.</p>
+  </section>
+
+  <section id="scope" class="panel">
+    <h2>Scope, assumptions &amp; guardrails</h2>
+    <ul>
+      <li>GO 3S records H.264 MP4, up to 4K30; FreeFrame is 3840×2880. Test FlowState, horizon lock, FOV, aspect ratio, audio and export—not dual-lens stitching or 8K.</li>
+      <li>Dedicated rootless Ubuntu 24.04 Distrobox, persistent separate Wine prefix, existing host NVIDIA driver, Xwayland first. Trial uses a custom home; final toolbox uses normal shared host home for standard desktop export integration.</li>
+      <li>BoxKit image/CI and dotfiles source changes authorized by the user's adoption request. No host package layering, driver changes, Flatpak installation, camera firmware updates, importer changes, commits, pushes or global chezmoi apply.</li>
+      <li>No Wine as root. Install Linux dependencies using container sudo only.</li>
+      <li>Use small byte-identical copies of originals; never remux or transcode inputs before Studio. Keep exports separate. Do not execute the importer or delete camera files.</li>
+      <li>Distrobox can access personal files despite a custom home. Trusted installers only; no broad permission changes or security disabling to fix graphics.</li>
+      <li>At most two clean Studio/Wine version combinations initially. Diagnose logs rather than piling on DLL overrides.</li>
+      <li>Potential user gates: official download authentication, installer agreement, selecting representative media, visual judgment of stabilization and output quality.</li>
+    </ul>
+  </section>
+
+  <section id="phases" class="panel">
+    <h2>Phases &amp; stop gates</h2>
+    <div class="overflow-x-auto"><table class="w-full text-sm">
+      <thead><tr><th>Phase</th><th>Actions</th><th>Exit gate</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>0 · Record</td><td>Research, hardware, scope, budget and reversible setup.</td><td>This document exists; original files and containers remain untouched.</td><td>Complete</td></tr>
+        <tr><td>1 · Container</td><td>Ubuntu 24.04; custom home; NVIDIA integration; GL/Vulkan/display diagnostics.</td><td>NVIDIA rendering visible in container, not merely nvidia-smi.</td><td id="phase-container">Complete: NVIDIA GL 4.6 and Vulkan 1.4.341</td></tr>
+        <tr><td>2 · Wine / Studio</td><td>Choose official installer; record hash and exact versions; new prefix; install and launch.</td><td>Stable main window, file picker and reopen.</td><td id="phase-studio">Launch/scaling passed; helper removed; D: media access verified</td></tr>
+        <tr><td>3 · Media</td><td>Normal and FreeFrame clips; stabilization, horizon lock, FOV, aspect ratio and audio; 1080p then 4K exports.</td><td>Exports play correctly outside Studio; edits persist; restart tests pass.</td><td id="phase-media">Pending</td></tr>
+        <tr><td>4 · Performance</td><td>If needed, add compatible NVIDIA Wine bridges; compare software/hardware paths.</td><td>Useful preview/export speed with measured GPU activity and bounded storage.</td><td>Deferred until functional proof</td></tr>
+        <tr><td>5 · Reproduce</td><td>Record dependency manifest; preserve prefix; rebuild in another clean local environment.</td><td>Same acceptance results without undocumented manual tweaks.</td><td>Image/fresh prefix passed; media proof pending</td></tr>
+        <tr><td>6 · Adopt</td><td>Dedicated runtime-only BoxKit image, CI build/cleanup and dotfiles launcher; no proprietary redistribution.</td><td>Local build/runtime checks; user explicitly approved proceeding without completed media evidence.</td><td>Build/tests and cold-start QuickLook check passed; publication pending</td></tr>
+      </tbody>
+    </table></div>
+    <h3>Version selection</h3>
+    <p>Preferred historical diagnostic baseline: Studio 5.6.1 / Wine 9.0 / Windows 11 mode, if an official installer is available and recognizes these GO 3S files. Published evidence is mostly photo-focused, not GO 3S proof. Studio 5.8.2 also has photo-export reports; 5.9.10 has anecdotal launch reports.</p>
+    <p>If historical installer is not officially available, use current official Studio 6.0.5 with a selected current Wine version as the exploratory lane. Record this deviation. Do not obtain old installers from untrusted mirrors. Current nvidia-libs documents Wine ≥10 build requirements; do not blindly mix it with Wine 9. Add runtime components only when required by installer or diagnostic evidence.</p>
+  </section>
+
+  <section id="validation" class="panel">
+    <h2>Acceptance checklist</h2>
+    <ol>
+      <li>Copy one short normal video and one short FreeFrame video into trial inputs; verify SHA-256 against originals. Ask user to identify modes if metadata is inconclusive.</li>
+      <li>Open and scrub both clips. Confirm image, audio, expected duration and camera metadata recognition.</li>
+      <li>On FreeFrame, apply FlowState, horizon lock and supported FOV options; test landscape and portrait framing.</li>
+      <li>Export H.264 MP4 at 1080p, then target 4K. Check output using ffprobe/decoder and a Linux player. Compare stabilization visually; no black frames, corrupt frames or audio drift.</li>
+      <li>Save edits, close/reopen Studio three times, then stop/start the container. Edits and export functionality must survive.</li>
+      <li>Test one longer representative clip; record duration, export wall time, peak VRAM, GPU encoder/decoder activity and disk use.</li>
+      <li>Record user verdict: acceptable preview responsiveness and export quality. Software encoding may pass functional proof; it does not establish NVIDIA acceleration.</li>
+    </ol>
+    <p class="mt-4 text-amber-200">Original gate required verified GO 3S FreeFrame export before adoption. The user explicitly requested packaging after reporting Studio works; that changes scope, not the evidence. A working UI or nvidia-smi still does not establish export correctness or hardware encoding.</p>
+  </section>
+
+  <section id="runbook" class="panel">
+    <h2>Local paths &amp; execution log</h2>
+    <ul>
+      <li>Container: <code>insta360-studio-test</code></li>
+      <li>Trial root: <code>~/.local/share/insta360-studio-trial/</code></li>
+      <li>Subdirectories: <code>home/</code>, <code>installers/</code>, <code>logs/</code>, <code>inputs/</code>, <code>exports/</code></li>
+      <li>Historical baseline: <code>home/prefixes/wine9-baseline</code> via <code>run-in-prefix.sh</code>. Current trial: <code>home/prefixes/wine11-studio605</code> via <code>run-wine11.sh</code>, prepending <code>/opt/wine-stable/bin</code> inside the container. Helpers are mode 0700. Neither uses host <code>~/.wine</code>.</li>
+      <li>Repository impact now includes dedicated image/helper, focused tests, build/cleanup workflows and docs, plus separate dotfiles integration. Existing untracked <code>insta360-wifi-api/</code> and <code>insta360ctl/</code> remain untouched user work.</li>
+    </ul>
+    <div id="execution-log">
+      <h3>Container and graphics — passed</h3>
+      <pre><code>distrobox create --yes --name insta360-studio-test \
+  --image quay.io/toolbx/ubuntu-toolbox:24.04 \
+  --home "$HOME/.local/share/insta360-studio-trial/home" --nvidia
+# Inside container:
+sudo apt-get update
+sudo apt-get install -y --no-install-recommends mesa-utils vulkan-tools ca-certificates curl
+__NV_PRIME_RENDER_OFFLOAD=1 __GLX_VENDOR_LIBRARY_NAME=nvidia glxinfo -B
+VK_DRIVER_FILES="$HOME/nvidia_icd.json" __NV_PRIME_RENDER_OFFLOAD=1 \
+  __VK_LAYER_NV_optimus=NVIDIA_only vulkaninfo --summary</code></pre>
+      <p>Base image digest: <code>sha256:ba49ac2537355d829b7d7dc74414e1ca732688a66843d7ed0ab0978cfd12ed8a</code>. Logs: <code>logs/create.log</code>, <code>logs/initialize.log</code>, <code>logs/graphics-preflight.log</code>, <code>logs/vulkan-corrected.log</code>.</p>
+      <p>Observed failure: copied host NVIDIA ICD referenced Fedora path <code>/usr/lib64/libGLX_nvidia.so.0</code>; Ubuntu library exists at <code>/usr/lib/x86_64-linux-gnu/libGLX_nvidia.so.0</code>. Created trial-only <code>home/nvidia_icd.json</code> with corrected path and selected it via <code>VK_DRIVER_FILES</code>. No host manifest or system library changed. Corrected test enumerates only RTX 500 Ada; GL reports NVIDIA direct rendering.</p>
+    </div>
+    <h3>Wine baseline — prepared, not Studio proof</h3>
+    <pre><code># Inside the trial container only:
+sudo dpkg --add-architecture i386
+sudo apt-get update
+sudo apt-get install -y --no-install-recommends \
+  wine wine64 wine32:i386 winetricks fonts-wine fonts-liberation cabextract unzip winbind
+# On host, dedicated helper supplies prefix and NVIDIA environment:
+trial="$HOME/.local/share/insta360-studio-trial"
+"$trial/run-in-prefix.sh" env 'WINEDLLOVERRIDES=winemenubuilder.exe,mscoree,mshtml=d' wineboot --init
+"$trial/run-in-prefix.sh" winecfg /v win11
+"$trial/run-in-prefix.sh" wine reg add 'HKCU\Software\Wine\Drivers' /v Graphics /t REG_SZ /d x11 /f
+"$trial/run-in-prefix.sh" wine notepad
+# Close Notepad before waiting:
+"$trial/run-in-prefix.sh" wineserver -w</code></pre>
+    <p>Installed Wine <code>9.0~repack-4build3</code>, Winetricks <code>20240105-2</code>. Registry confirms <code>Microsoft Windows 11</code>, build <code>22000</code>, Graphics=<code>x11</code>. Wine <code>cmd /c ver</code> reports kernel version <code>10.0.22000</code>, expected for Windows 11. An initial query for <code>HKCU\Software\Wine\Version</code> failed because that value is absent; product/build values above provide the verification.</p>
+    <p>Notepad appeared as <code>notepad.exe</code> in niri (window 192), then closed cleanly; its managed test session exited. Prefix initialization logged OLE/RpcSs messages, but subsequent command/GUI smoke checks passed. <code>winemenubuilder.exe</code> is intentionally disabled by the helper to avoid host application/menu associations; related startup error 126 is expected. Mono/Gecko download prompts were suppressed only during prefix initialization. No speculative vcrun/DXVK/NVIDIA Wine bridge installation yet.</p>
+    <p>Artifacts under trial root: <code>logs/wine-install.log</code>, <code>logs/wine-prefix.log</code>, <code>logs/wine-version-check.log</code> (includes failed initial registry query), <code>logs/wine-verified.log</code>, <code>logs/notepad-smoke.log</code>, <code>logs/packages.tsv</code>. Helper shell syntax passed <code>bash -n</code>. Base/package version records are observations, not an immutable package mirror.</p>
+    <h3>Installer acquisition — resolved by user download</h3>
+    <p>Earlier browser automation encountered HTTP 403 / Cloudflare challenge; no bypass attempted. User subsequently downloaded Studio. <code>xdg-user-dir DOWNLOAD</code> resolves to <code>/var/home/pietersz/dev/Downloads</code>; earlier checks of <code>~/Downloads</code> did not cover this configured directory.</p>
+    <p>Located file: <code>~/dev/Downloads/Insta360_Studio_6.0.5_release_insta360(RC_build14)_20260914_172337_1789378071561.exe</code>. Size: 889,543,448 bytes. <code>file</code> identifies a PE32 Windows GUI executable (i386 installer bootstrapper; this does not establish the application payload architecture). Filename identifies release 6.0.5 / RC_build14; visible installer confirms version 6.0.5. Authenticode verification now passed (see below).</p>
+    <p>SHA-256: <code>c609ae25c7fecde0190845bef392279da2cb84240740c383386fc2dbf1b3f967</code>. Hash records local artifact identity only; no vendor checksum comparison performed. Authenticode verification with <code>osslsigncode verify -CAfile /etc/ssl/certs/ca-certificates.crt</code> returned 0, with signature and CRL checks passing. Certificate signer: <code>影石创新科技股份有限公司</code>, chained through GlobalSign GCC R45 EV CodeSigning CA 2020. Full result: <code>logs/installer-signature.log</code>.</p>
+    <h3>Current runner and visible install — completed</h3>
+    <p>Added official WineHQ Noble repository inside the trial container only. Key fingerprint: <code>D43F 6401 4536 9C51 D786 DDEA 76F1 A20F F987 672F</code>, downloaded over HTTPS from WineHQ. Installed <code>wine-stable=11.0.0.0~noble-1</code> (not the winehq-stable meta-package): <code>/opt/wine-stable/bin/wine</code> reports 11.0; <code>/usr/bin/wine</code> still reports 9.0. Fresh prefix initialized in Windows 11 mode with X11 driver. No DXVK or NVIDIA Wine bridges installed.</p>
+    <p>Logs: <code>logs/winehq-selection.log</code>, <code>logs/winehq-apt-update.log</code>, <code>logs/wine11-install.log</code>, <code>logs/wine-runners.log</code>, <code>logs/wine11-prefix.log</code>. Inspection tools installed inside container: osslsigncode, innoextract, gnupg, xdotool, x11-utils, imagemagick. Innoextract could not parse this newer Inno Setup 6.4.0.1 format; this is a tool-version limitation, not proof of installer corruption. Signed installer subsequently opened normally.</p>
+    <pre><code>trial="$HOME/.local/share/insta360-studio-trial"
+installer="$HOME/dev/Downloads/Insta360_Studio_6.0.5_release_insta360(RC_build14)_20260914_172337_1789378071561.exe"
+"$trial/run-wine11.sh" wine "$installer" /NORESTART \
+  /LOG="Z:\\var\\home\\pietersz\\.local\\share\\insta360-studio-trial\\logs\\studio-install.log"</code></pre>
+    <p>Visible installer launched through managed session <code>insta360-installer</code>; user clicked through installation options. Setup completed at 12:07:11, with no Windows restart requested. Studio started from installer and rendered its main library. User confirmed success and supplied screenshot showing tiny controls. Evidence: <code>logs/studio-install.log</code>, <code>logs/studio-first-launch.png</code>. No extra vcrun, DXVK or NVIDIA bridge work was needed for this first launch; export capability remains untested.</p>
+    <h3>UI scaling — working, user confirmed</h3>
+    <p>Original Wine DPI=96 made controls tiny on 2560×1600 at niri scale 1.5. LogPixels=144 enlarged controls but left half the client area black; 192 DPI reproduced that layout issue. Restoring 96 DPI and trying QT_SCALE_FACTOR=1.5 did not enlarge the final full-width UI. Final successful combination: <code>HKCU\Control Panel\Desktop\LogPixels</code> DWORD <code>144</code> plus environment <code>QT_ENABLE_HIGHDPI_SCALING=0</code>. This points to an interaction between Studio/Qt automatic scaling and Wine geometry; precise upstream cause is not established.</p>
+    <p>Verified whole-window rendering at 150%; user said “working better.” Screenshots: <code>logs/studio-first-launch.png</code> (before), <code>logs/studio-dpi144-qt-disabled.png</code> (working). Desktop registry backup: <code>logs/desktop-before-dpi.reg</code>. Command log: <code>logs/dpi-change.log</code>. Full runner/package snapshot: <code>logs/packages-after-studio.tsv</code>.</p>
+    <pre><code>trial="$HOME/.local/share/insta360-studio-trial"
+# Prefix-only change; restart Studio's Wine server after closing Studio:
+"$trial/run-wine11.sh" wine reg add 'HKCU\Control Panel\Desktop' \
+  /v LogPixels /t REG_DWORD /d 144 /f
+# Persistent local launch command:
+"$trial/launch-studio.sh"</code></pre>
+    <p>Launcher wraps Wine 11 with <code>QT_ENABLE_HIGHDPI_SCALING=0</code>; no other Qt scale overrides retained. Host display resolution/niri scale unchanged. Only Studio's empty window was resized while diagnosing; no global window rules changed. Current trial root size 6.0 GiB; filesystem approximately 123 GiB free. Main application is intentionally left open for user inspection.</p>
+    <p>To undo scaling: close Studio, delete only its prefix's <code>HKCU\Control Panel\Desktop\LogPixels</code> value (originally absent), stop that prefix's wineserver, then launch without the Qt override. Wine 9 prefix remains unchanged.</p>
+    <h3>QuickLook tray helper — disabled</h3>
+    <p>User screenshot showed a QuickLook icon in a tiny floating window. niri identified the tray container as <code>explorer.exe</code>, while Wine was running <code>quick-look.exe</code> and <code>quick-look-daemon.exe</code>. Installer log confirms the optional QuickLook plugin was selected. It provides Windows File Explorer Spacebar previews; Studio import does not depend on that shell preview feature.</p>
+    <p>Exported prefix Run key to <code>logs/run-before-quicklook.reg</code>, then deleted only <code>HKCU\Software\Microsoft\Windows\CurrentVersion\Run\Studio.QuickLook</code>. Stopped <code>quick-look-daemon.exe</code> and <code>quick-look.exe</code> using this prefix's Wine taskkill. The floating tray disappeared and main Studio stayed open (window 235). Subsequent registry/window checks confirmed no QuickLook Run entry and no floating Explorer tray. No global Explorer kill or host startup change.</p>
+    <p>Rollback, if Windows shell previews are wanted: restore the single Run value as REG_SZ <code>C:\Program Files\Insta360 Studio\quick-look.exe</code>, then launch that helper. Installer upgrades may recreate its Run entry.</p>
+    <h3>Host dev / Pictures mapping — verified</h3>
+    <p>Distrobox already bind-mounts host home read-write at <code>/var/home/pietersz</code>. Container and host <code>/var/home/pietersz/dev/Pictures</code> reported identical device/inode <code>58:43222</code>; directory was readable/traversable. No new bind mount, container recreation, relabeling, ownership change or copy was needed.</p>
+    <ul>
+      <li>Created symlink <code>trial/home/dev → /var/home/pietersz/dev</code>, so container <code>~/dev/Pictures</code> works with its custom home.</li>
+      <li>Created prefix <code>dosdevices/d: → /var/home/pietersz/dev</code>. Studio can browse <code>D:\Pictures</code>, with imported albums under <code>D:\Pictures\albums</code>.</li>
+      <li><code>winepath -w</code> returns <code>D:\Pictures</code>; Wine cmd directory existence test passed. Log: <code>logs/media-mapping.log</code>.</li>
+      <li>These paths point to real originals, not a sandbox copy. Do not overwrite them; keep initial exports under the trial exports directory. No media files were imported, read for content, copied or changed in this mapping step.</li>
+    </ul>
+    <p>These two symlinks describe the original trial. Remove only the symlinks after checking their targets, never their target directories. The final image now manages its own D: mapping in the persistent production prefix.</p>
+    <h3>Acceleration caveat for the next stage</h3>
+    <p>Although native container NVIDIA GL/Vulkan tests passed, Studio exporter startup arguments reported Intel Arc/Mesa GL and disabled H.264/H.265 hardware encode/decode flags. This is startup evidence, not an export benchmark. Do not claim Studio NVIDIA acceleration yet; verify actual rendering/encoding with sample media before optimization.</p>
+    <h3>Original trial document validation — passed</h3>
+    <p>Desktop (1440×900) and mobile (390×844) Playwright inspection passed without reported page errors; mobile screenshot inspected. JSON metadata, required meta tags, unique IDs, internal navigation anchors and final newline checks passed. Temporary documentation preview server stopped after checks. No repository ContainerFiles, scripts or CI files changed, so no image build/push was performed.</p>
+    <h3>Adoption boundary</h3>
+    <p>The image contains Linux/Wine runtime dependencies and the launcher only. Keep Studio installers, prefixes, media and credentials out of image layers. CI tests image construction and launcher contracts; it cannot substitute for laptop GPU/media acceptance.</p>
+  </section>
+
+  <section id="adoption" class="panel">
+    <h2>BoxKit adoption — user authorized</h2>
+    <p>New image <code>insta360-toolbox</code>: Ubuntu 24.04 amd64, WineHQ <code>11.0.0.0~noble-1</code>, verified WineHQ key fingerprint, Mesa/Vulkan/media/font libraries. No DXVK, speculative vcrun or NVIDIA Wine bridges. NVIDIA drivers come from Distrobox <code>--nvidia</code>; the launcher repairs an incompatible injected ICD into the user prefix only after confirming the 64-bit library loads.</p>
+    <div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr><th>Owner</th><th>Files / contract</th></tr></thead><tbody>
+      <tr><td>BoxKit</td><td><code>ContainerFiles/insta360-toolbox</code>, <code>scripts/insta360-toolbox.sh</code>, <code>scripts/insta360-studio</code>, <code>tests/test_insta360_studio.py</code>; build matrix, conditional launcher-test step, and GHCR retention list.</td></tr>
+      <tr><td>Dotfiles</td><td><code>dot_config/distrobox/insta360-toolbox.ini.tmpl</code>, <code>dot_local/bin/executable_insta360-studio</code>, scoped platform ignores, <code>tests/insta360-studio-config.test.ts</code>. Existing automatic creation/export flow reused. Export helper now targets exact desktop paths, not fuzzy application names.</td></tr>
+      <tr><td>User state</td><td><code>${XDG_DATA_HOME:-$HOME/.local/share}/insta360-studio/prefix</code>, outside the container/image; <code>D:</code> points to <code>~/dev</code>. Neither installer nor installed application is downloaded or published automatically.</td></tr>
+    </tbody></table></div>
+    <h3>First installation on another machine</h3>
+    <ol>
+      <li>Release BoxKit first: publishing is triggered by a version tag, not by editing the workflow or pushing an ordinary commit. Confirm <code>ghcr.io/dpietersz/insta360-toolbox:latest</code> exists.</li>
+      <li>Review/apply the dotfiles changes on local Bluefin/Fedora amd64. Existing creation script discovers the INI; NVIDIA passthrough follows <code>hasNvidia</code>. Do not apply inside this work session without authorization.</li>
+      <li>Use your official verified 6.0.5 installer, then run <code>insta360-studio --install /absolute/path/to/installer.exe</code>. Exact SHA-256 is pinned in the helper. A different build requires deliberate checksum review. Installation remains interactive; decline QuickLook and uncheck launch-at-finish.</li>
+      <li>Run <code>insta360-studio</code> or use the exported desktop entry. Import from <code>D:\Pictures</code>. <code>--setup</code> reapplies defaults explicitly. Close Studio before setup/install or container refresh.</li>
+    </ol>
+    <h3>Verification and local migration</h3>
+    <p id="adoption-verification">Final local image build passed: <code>e6f18e39a3b8b22c2d2a23c8484fa8245205ca69e718a4a28696435893e836c1</code>, approximately 3.57 GB. Nine mocked runtime tests, six dotfiles integration tests and ten existing importer tests passed. Workflow YAML and shell syntax validated. Fresh non-root prefix test passed under Xvfb with network disabled: X11 driver, DPI 144 and D:\Pictures access. Actual root refusal and exported desktop validation also passed. Initial smoke exposed a Mono installer dialog; initialization now suppresses only Mono/Gecko setup. Logs: <code>logs/final-image-smoke.log</code>, <code>logs/final-toolbox-setup.log</code>, <code>logs/final-toolbox-export.log</code>. Final graphical cold start passed after the user closed Studio: waited for its wineserver, stopped the toolbox, then launched through the installed host command. At 40 seconds, Studio's main window (niri 289) was rendered, its exporter service was running, and neither QuickLook process nor floating Explorer tray existed. D:\Pictures remained accessible. Screenshot <code>logs/final-toolbox-restart.png</code> and launch log <code>logs/final-toolbox-restart.log</code>; Studio left open. This verifies one cold restart, not the complete media/export acceptance matrix.</p>
+    <h3>Relaunch findings and fixes</h3>
+    <ul>
+      <li>Studio opens in the final toolbox with the copied application/project library intact. Installed host command: <code>~/.local/bin/insta360-studio</code>. Exported desktop uses the absolute container helper, avoiding recursion through shared host PATH.</li>
+      <li>Studio itself restarts QuickLook and recreates <code>Studio.QuickLook</code>. Removing only the Run value was insufficient. Tested <code>WINEDLLOVERRIDES=winemenubuilder.exe,quick-look.exe,quick-look-daemon.exe=d</code>: explicit QuickLook launch returned 53 (blocked); tasklist confirmed no QuickLook processes; main Studio remained running. This override is now in the built launcher, including initial prefix boot. Atomically refreshed the current container helper without stopping Studio; its SHA-256 matches the source. Subsequent full app/container cold restart passed: no QuickLook process/tray, unchanged source/container helper checksum.</li>
+      <li>Generic <code>distrobox-export --app insta360-studio</code> also matched the host trial-container desktop. Dotfiles exporter now uses the exact declared desktop path. Removed only the accidental export created by this test; original trial entry remains intact.</li>
+      <li>User's startup screenshot showed an Insta360 FlexiCare promotion, not an error. No application setting, network block or unsupported patch added to suppress promotions.</li>
+    </ul>
+    <p>After Studio closed normally, waited for the trial prefix's wineserver to exit and copied its prefix with <code>cp -a --reflink=auto</code> into the new persistent path. Source prefix and original trial container remain unchanged. Created local <code>insta360-toolbox</code> from <code>localhost/insta360-toolbox:test</code> using a temporary manifest (pull=false), not a fake GHCR tag. No global chezmoi apply or repository push. This manual migration is not built into the image or dotfiles.</p>
+    <p>Updated plan passed desktop/mobile browser inspection, metadata/anchor validation and diff whitespace checks; temporary preview server stopped. No commits, pushes or global chezmoi apply. Actual runtime checks confirmed UID 1000, Wine 11.0, matching host/container Pictures inode, and NVIDIA RTX 500 Ada driver visibility. These are infrastructure checks, not proof of Studio hardware encode/decode. Existing toolboxes and importer were not modified.</p>
+    <p>Rollback: close the final Studio instance, retain its persistent prefix, and use <code>~/.local/share/insta360-studio-trial/launch-studio.sh</code>. Remove only the final toolbox/export when deliberately requested; neither shared-home prefix nor original media should be deleted.</p>
+  </section>
+
+  <section id="rollback" class="panel">
+    <h2>Rollback &amp; preservation</h2>
+    <ol>
+      <li>Close Studio and wait for its prefix-specific wineserver before backing up or removing anything.</li>
+      <li>Preserve logs, installer hash, dependency manifest and any successful prefix while stopped. Container snapshots do not include bind-mounted home/prefix/media.</li>
+      <li>Stop and remove only <code>insta360-studio-test</code> using Distrobox. Do not remove shared images or run global Podman prune.</li>
+      <li>Keep trial root by default. Delete it only after explicit confirmation that no wanted exports or working prefixes remain.</li>
+      <li>No host package, driver or security changes were made. Distrobox creation may manage its normal host desktop entry; use Distrobox removal rather than arbitrary filesystem cleanup. If proposed troubleshooting requires host driver/security changes, stop and ask first.</li>
+    </ol>
+  </section>
+
+  <section id="sources" class="panel">
+    <h2>Evidence &amp; uncertainty</h2>
+    <ul>
+      <li><a href="https://onlinemanual.insta360.com/go3/en-us/specs/shooting">Official GO series media specifications</a>.</li>
+      <li><a href="https://onlinemanual.insta360.com/go3s/en-us/faq/feature/stabilization">Official GO 3S FreeFrame / stabilization requirements</a>.</li>
+      <li><a href="https://www.insta360.com/download/insta360-go3s">Official Studio download</a>: 6.0.5 observed during research; Windows/macOS supported, Linux unofficial.</li>
+      <li><a href="https://www.modlearth.com/blog/insta360-linux/">Studio 5.6.1 / Wine 9 / Windows 11 report</a>; predominantly photographs.</li>
+      <li><a href="https://www.modlearth.com/blog/insta360-darktable/">Studio 5.8.2 Ubuntu/Bottles X5 photo workflow</a>; not video proof.</li>
+      <li><a href="https://www.reddit.com/r/Insta360/comments/1ksv6br/linux_users_how_are_you_editing_inst360_x_videos/">Video performance and NVIDIA bridges reports</a>; anecdotal.</li>
+      <li><a href="https://www.reddit.com/r/Insta360/comments/1r8t2ux/insta360_under_linux/">Newer Studio Wine reports</a>; incomplete recipes.</li>
+      <li><a href="https://github.com/SveSop/nvidia-libs">NVIDIA Wine bridges</a>: version compatibility must be checked separately.</li>
+      <li><a href="https://distrobox.it/useful_tips/#using-the-gpu-inside-the-container">Distrobox GPU integration</a>.</li>
+    </ul>
+    <p class="mt-4">Research supports a bounded trial, not a promise. No reproducible GO 3S FreeFrame-in-Distrobox success was verified. Generated images are intentionally omitted; precise HTML diagrams/tables document this operational plan.</p>
+  </section>
+</article>
+</main>
+</body>
+</html>

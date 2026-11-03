@@ -22,6 +22,7 @@ jobs:
           - udx-toolbox
           - playwright-toolbox
           - ubuntu-gui-toolbox
+          - insta360-toolbox
     steps:
       # Free up disk space on the runner before building.
       # GitHub's ubuntu-24.04 runner ships with ~14GB free out of ~30GB; the
@@ -45,6 +46,13 @@ jobs:
       # Clone code to runner
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1 (Node 24)
+
+      - name: Test Insta360 launcher contracts
+        if: matrix.containerfile == 'insta360-toolbox'
+        run: |
+          sh -n scripts/insta360-toolbox.sh
+          bash -n scripts/insta360-studio
+          python3 -m unittest discover -s tests -p 'test_insta360_studio.py' -v
 
       # Extract version from git tag
       - name: Extract version

@@ -1,0 +1,19 @@
+# Studio is a Windows application run by a non-root user at runtime.  Pin the
+# base because WineHQ's noble packages target this Ubuntu release.
+FROM --platform=linux/amd64 quay.io/toolbx/ubuntu-toolbox:24.04
+
+LABEL com.github.containers.toolbox="true" \
+      usage="This image is meant to be used with the toolbox or distrobox command" \
+      summary="Ubuntu Wine runtime for a user-supplied Insta360 Studio installer" \
+      maintainer="pietersz@gmail.com"
+
+COPY ../scripts/insta360-toolbox.sh /
+COPY ../scripts/distrobox-shims.sh /
+
+RUN chmod +x insta360-toolbox.sh distrobox-shims.sh \
+    && /insta360-toolbox.sh \
+    && rm /insta360-toolbox.sh /distrobox-shims.sh
+
+# Keep launcher changes separate from the expensive dependency layer.
+COPY ../scripts/insta360-studio /usr/local/bin/insta360-studio
+RUN chmod +x /usr/local/bin/insta360-studio
