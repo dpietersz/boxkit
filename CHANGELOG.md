@@ -1,5 +1,30 @@
 # Changelog
 
+## [2.4.0](https://github.com/dpietersz/boxkit/compare/v2.3.22...v2.4.0) (2026-11-03)
+
+
+### Features
+
+* add host-side Citrix Workspace installer helper ([939956f](https://github.com/dpietersz/boxkit/commit/939956f0d604ecbca5be86cdbf1919631ed431e8))
+* **insta360-toolbox:** add Ubuntu/Wine runtime image for Insta360 Studio ([aa044de](https://github.com/dpietersz/boxkit/commit/aa044de386e49e9fcdc4817d785e3d1a1d261552))
+
+
+### Bug Fixes
+
+* **ci:** count images, not package versions, in GHCR retention ([129fc37](https://github.com/dpietersz/boxkit/commit/129fc376ca7f48f2ee025a3b4156e330cffdb9f7))
+* **ci:** pass explicit test file to node --test ([ce453fb](https://github.com/dpietersz/boxkit/commit/ce453fb73c0a2b4ee926ba37ef903d1601652264))
+* **playwright-toolbox:** set PLAYWRIGHT_BROWSERS_PATH in image env ([d35ac4a](https://github.com/dpietersz/boxkit/commit/d35ac4a49757efa7298357113bbbc126ece074ba))
+
+
+### Documentation
+
+* document insta360-toolbox, Citrix helper and validation ([843674c](https://github.com/dpietersz/boxkit/commit/843674c6a4baf1a17a9f86978c8cda7c32e4e04d))
+
+
+### Miscellaneous
+
+* ignore Python caches and local insta360 reference clones ([d9b7ac7](https://github.com/dpietersz/boxkit/commit/d9b7ac7a282aa9e846945c3dcebbf0e9d4cc4197))
+
 ## [2.3.22](https://github.com/dpietersz/boxkit/compare/v2.3.21...v2.3.22) (2026-11-01)
 
 
