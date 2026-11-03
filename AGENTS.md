@@ -150,7 +150,7 @@ docs: update README                        # Patch version bump
 | `release-please.yml` | Push to main | Creates release PRs |
 | `build-containers.yml` | Version tags (v*) | Builds & publishes images |
 | `scheduled-release.yml` | Weekly Sunday 10:00 UTC | Triggers automated releases |
-| `cleanup-ghcr.yml` | Weekly Sunday 02:00 UTC | Keeps last 5 image versions |
+| `cleanup-ghcr.yml` | Weekly Sunday 02:00 UTC | Keeps last 3 images (+ their cosign signatures) |
 
 ## Security & Secrets
 

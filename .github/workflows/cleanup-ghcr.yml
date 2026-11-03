@@ -12,16 +12,30 @@ on:
   schedule:
     - cron: "0 2 * * 0"  # Weekly on Sunday at 2 AM UTC
   workflow_dispatch:  # Allow manual trigger
+    inputs:
+      dry_run:
+        description: "Only log what would be deleted"
+        type: boolean
+        default: false
 
 jobs:
   cleanup:
     runs-on: ubuntu-latest
     permissions:
+      contents: read
       packages: write
     steps:
-      # actions/delete-package-versions still targets deprecated Node 20.
-      # Use github-script v9's Node 24 runtime and the Packages API directly.
-      - name: Prune old toolbox versions (keep 3)
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1 (Node 24)
+
+      - name: Test retention logic
+        run: node --test .github/scripts/
+
+      # Retention counts images, not raw package versions: each release also
+      # pushes a cosign .sig version. See .github/scripts/ghcr-retention.cjs.
+      # actions/delete-package-versions still targets deprecated Node 20, so
+      # use github-script v9's Node 24 runtime and the Packages API directly.
+      - name: Prune old toolbox images (keep 3)
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0 (Node 24)
         with:
           script: |
@@ -30,43 +44,15 @@ jobs:
               "playwright-toolbox",
               "ubuntu-gui-toolbox",
             ];
-            const owner = context.repo.owner;
-            const { data: account } = await github.rest.users.getByUsername({
-              username: owner,
+            const { prune } = require(
+              `${process.env.GITHUB_WORKSPACE}/.github/scripts/ghcr-retention.cjs`,
+            );
+            await prune({
+              github,
+              context,
+              core,
+              packageNames,
+              keep: 3,
+              dryRun: context.payload.inputs?.dry_run === "true" ||
+                context.payload.inputs?.dry_run === true,
             });
-            const organization = account.type === "Organization";
-            const ownerKey = organization ? "org" : "username";
-            const listVersions = organization
-              ? github.rest.packages.getAllPackageVersionsForPackageOwnedByOrg
-              : github.rest.packages.getAllPackageVersionsForPackageOwnedByUser;
-            const deleteVersion = organization
-              ? github.rest.packages.deletePackageVersionForOrg
-              : github.rest.packages.deletePackageVersionForUser;
-
-            for (const packageName of packageNames) {
-              const ownerParams = { [ownerKey]: owner };
-              const versions = await github.paginate(listVersions, {
-                ...ownerParams,
-                package_type: "container",
-                package_name: packageName,
-                per_page: 100,
-              });
-              versions.sort(
-                (a, b) => new Date(b.created_at) - new Date(a.created_at),
-              );
-
-              core.info(
-                `${packageName}: keeping ${Math.min(3, versions.length)} of ${versions.length} versions`,
-              );
-              for (const version of versions.slice(3)) {
-                core.info(
-                  `Deleting ${packageName} version ${version.id} (${version.name})`,
-                );
-                await deleteVersion({
-                  ...ownerParams,
-                  package_type: "container",
-                  package_name: packageName,
-                  package_version_id: version.id,
-                });
-              }
-            }
