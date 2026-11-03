@@ -4,7 +4,7 @@
 
 boxkit is a framework for building custom toolbox and distrobox container images using GitHub Actions. The codebase uses ContainerFiles (Dockerfile syntax), shell scripts, and GitHub workflows to build and publish OCI-compliant container images to GHCR.
 
-**Current Images**: udx-toolbox, playwright-toolbox
+**Current Images**: udx-toolbox, playwright-toolbox, ubuntu-gui-toolbox, insta360-toolbox
 
 ## Directory Structure
 
@@ -42,9 +42,11 @@ sh -n scripts/{name}.sh
 bash -n scripts/{name}.sh  # For bash-specific scripts
 ```
 
-### No Traditional Tests
+### Validation
 
-This is an infrastructure repo. Validation is done via successful container builds. Always build locally before pushing changes that modify ContainerFiles, scripts, or packages.
+Always build locally before pushing changes that modify ContainerFiles, scripts, or packages. Insta360's user-side Wine wrapper also has isolated mock tests: `python3 -m unittest discover -s tests -p 'test_insta360_studio.py' -v`.
+
+For Insta360 changes, read `README.md`'s Insta360 section and `Plans/insta360-studio-trial.html`. The image contains only Ubuntu/Wine dependencies and the launcher; the verified proprietary installer/persistent user prefix never belong in GHCR. Never run prefix setup/Studio as root. Dotfiles owns its Distrobox definition/host launcher; no automatic trial migration. Media/export and GPU encoding acceptance remain distinct from a successful image build.
 
 ### Linting (Manual)
 

@@ -4,13 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this repo is
 
-`boxkit` is Dimitri's fork of the ublue-os boxkit framework — a set of `ContainerFiles`, shell scripts, and GitHub Actions that build and publish OCI toolbox images to GHCR. Three images ship today:
+`boxkit` is Dimitri's fork of the ublue-os boxkit framework — a set of `ContainerFiles`, shell scripts, and GitHub Actions that build and publish OCI toolbox images to GHCR. Four images are configured in the build matrix:
 
 | Image | Base | Purpose |
 |---|---|---|
 | `ghcr.io/dpietersz/udx-toolbox` | Arch (`toolbx-images/arch-toolbox`) | Daily-driver GUI apps that have no acceptable Fedora source: Storage Explorer, Obsidian, Legcord, Polypane, Bruno, LibreOffice, darktable. Wayland/niri-tuned. NVIDIA-compatible via `distrobox create --nvidia` (the image is identical on Intel and NVIDIA — passthrough is host-side). |
 | `ghcr.io/dpietersz/ubuntu-gui-toolbox` | Ubuntu 24.04 (pinned, `toolbx/ubuntu-toolbox:24.04`) | GUI apps whose upstream binaries were believed to need an older glibc than rolling Arch provides. Ships **LocalSend** (pinned 1.18.2). NVIDIA passthrough deliberately OFF. ⚠️ The glibc premise did not reproduce on 2026-09-07 — see below. |
 | `ghcr.io/dpietersz/playwright-toolbox` | Ubuntu (`toolbx-images/ubuntu-toolbox`) | Playwright + Chromium/Firefox/WebKit for E2E testing. `setup-host-integration` exports `playwright*` to `~/.local/bin` on the host. |
+| `ghcr.io/dpietersz/insta360-toolbox` | Ubuntu 24.04 / Wine 11 (amd64) | Runtime-only image for the verified user-supplied Studio 6.0.5 installer. Persistent per-user prefix, XWayland, 144 DPI, D: → ~/dev. First publication requires a new version-tag build; see README's Insta360 section. |
 
 **The glibc floor (why `ubuntu-gui-toolbox` exists — and why that reason is now UNVERIFIED).**
 

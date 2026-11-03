@@ -1,14 +1,15 @@
 # Quick Start
 
-This repo builds two container images for use with `distrobox` on Bluefin + niri:
+This repo defines four container images for use with `distrobox` on Bluefin + niri:
 
 | Image | Base | Purpose |
 |-------|------|---------|
 | `udx-toolbox` | Arch (toolbx) | Daily-driver GUI apps: Storage Explorer, Obsidian, Legcord, Polypane, Bruno, LibreOffice, darktable |
 | `ubuntu-gui-toolbox` | Ubuntu 24.04 (pinned) | LocalSend (pinned 1.18.2). Was split out because its binary was believed to need an older glibc than rolling Arch provides; that no longer reproduced on 2026-09-07 — see CLAUDE.md |
 | `playwright-toolbox` | Ubuntu (toolbx) | Playwright E2E testing with Chromium / Firefox / WebKit |
+| `insta360-toolbox` | Ubuntu 24.04 / Wine 11 (amd64) | Runtime for a user-supplied, checksum-verified Insta360 Studio 6.0.5 installer; no proprietary binaries in the image |
 
-Both are published to GHCR at `ghcr.io/<your-gh-user>/<image>:latest`.
+Images publish to GHCR at `ghcr.io/<your-gh-user>/<image>:latest` on version tags. The new Insta360 image first becomes available after its first release build.
 
 ---
 
@@ -72,6 +73,21 @@ distrobox enter playwright -- setup-host-integration
 The `setup-host-integration` script exports `playwright`, `playwright-test`, and `playwright-codegen` to `~/.local/bin` on the host. After that you can run `playwright test` from any project on the host as if Playwright were installed natively.
 
 NVIDIA is not relevant here — Playwright drives browsers headlessly.
+
+---
+
+## Insta360 Studio
+
+Follow [README → Insta360 Studio](README.md#insta360-studio) for the interactive local installation and dotfiles integration. Media appears as `D:\Pictures`; the dedicated Wine prefix persists outside the container. This app intentionally uses XWayland and prefix DPI, not the native Wayland/Electron settings used by other images.
+
+Local validation before release:
+
+```bash
+python3 -m unittest discover -s tests -p 'test_insta360_studio.py' -v
+podman build -f ContainerFiles/insta360-toolbox -t localhost/insta360-toolbox:test .
+```
+
+Do not publish a committed/running user container as an image: that would include Studio, its prefix, and potentially private settings. CI builds only the dependency/runtime recipe.
 
 ---
 
@@ -190,9 +206,14 @@ Your `$HOME` is shared, so all app config persists across recreates.
 boxkit/
 ├── ContainerFiles/
 │   ├── udx-toolbox
+│   ├── ubuntu-gui-toolbox
+│   ├── insta360-toolbox
 │   └── playwright-toolbox
 ├── scripts/
 │   ├── udx-toolbox.sh
+│   ├── ubuntu-gui-toolbox.sh
+│   ├── insta360-toolbox.sh
+│   ├── insta360-studio
 │   ├── playwright-toolbox.sh
 │   ├── distrobox-shims.sh
 │   └── decommission-ghcr.sh

@@ -88,13 +88,73 @@ Congratulations, you have successfully enabled container signing for all your cu
 
 ## Available Toolboxes
 
-This repository ships three CI-published toolbox images (pulled from GHCR). See `QUICK_START.md` for usage, NVIDIA setup, and the `/etc/distrobox-export.list` contract.
+This repository defines four toolbox images for CI publication to GHCR. See `QUICK_START.md` for usage, NVIDIA setup, and the `/etc/distrobox-export.list` contract.
 
 | Image | Base | Delivery | Description |
 |-------|------|----------|-------------|
 | `udx-toolbox` | Arch | GHCR (CI) | Daily-driver GUI apps: Storage Explorer, Obsidian, Legcord, Polypane, Bruno, LibreOffice, darktable. (LocalSend lives in `ubuntu-gui-toolbox`; Anytype + Ferdium removed 2026-07-13.) Wayland/niri-ready, NVIDIA-compatible via `distrobox create --nvidia`. |
 | `playwright-toolbox` | Ubuntu | GHCR (CI) | Playwright with full Chromium, Chromium headless shell, Firefox, and WebKit for E2E testing. |
 | `ubuntu-gui-toolbox` | Ubuntu 24.04 | GHCR (CI) | GUI apps whose prebuilt binaries were believed to need a stable glibc rather than rolling Arch — currently LocalSend (pinned 1.18.2). Same `/etc/distrobox-export.list` contract as `udx-toolbox`. The glibc premise did not reproduce on 2026-09-07; see CLAUDE.md. |
+| `insta360-toolbox` | Ubuntu 24.04 / Wine 11 (amd64) | GHCR (CI, next release) | Insta360 Studio runtime. Bring the approved official Studio 6.0.5 installer; proprietary binaries and Wine prefixes are never published. |
+
+## Citrix Workspace (local-only)
+
+**Windows alternative:** the persistent `windows-work` KVM/libvirt VM is not a
+Boxkit container. Dotfiles owns its launcher and the authoritative
+[installation, Windows 11 Pro rebuild, recovery, and removal runbook](https://github.com/dpietersz/dotfiles/blob/main/docs/how-to/windows-work-vm.html)
+(local: `~/dotfiles/docs/how-to/windows-work-vm.html`). Removing that VM does not
+remove the Linux Citrix setup below; rebuilding this toolbox must not touch the VM.
+
+For basic work desktops/apps, install the official Citrix x86-64 Debian package
+inside the existing `ubuntu-gui-toolbox` (Ubuntu 24.04). Citrix is **not included
+in published images**. No host package layering or reboot is needed.
+
+1. Download `icaclient-gcc-8_26.04.10.1_amd64.deb` from
+   [Citrix](https://www.citrix.com/downloads/workspace-app/linux/workspace-app-for-linux-latest.html)
+   and review/accept its license. The helper pins this version and verifies its
+   official SHA-256; a newer package requires updating both pins deliberately.
+2. Run on the host as your normal user:
+   ```bash
+   ./scripts/install-citrix-workspace.sh --accept-license ~/Downloads/icaclient-gcc-8_26.04.10.1_amd64.deb
+   ```
+3. Open **Citrix Workspace (on ubuntu-gui-toolbox)** from your app launcher, or
+   open an `.ica` file downloaded from your work portal. Authenticate yourself.
+
+The helper installs dependencies, exports the app/protocol launchers, registers
+`.ica` handling, and uses XWayland plus the host session bus. It omits USB,
+App Protection, deviceTRUST and EPA. If your employer requires endpoint checks
+or those security components, this basic setup may not qualify; do not bypass
+workplace policy. A working launcher does not prove a successful work session.
+
+**Dotfiles lifecycle:** `~/dotfiles` already owns container creation and its
+`distrobox-auto-export.sh` init hook. The helper adds Citrix to the local
+`/etc/distrobox-export.list`, so restarts retain exports. However, dotfiles may
+**recreate** this container when its GHCR image changes, removing local packages.
+Keep the installer outside Git and rerun the helper after recreation. With the
+verified installer cached as
+`~/.cache/citrix-workspace/icaclient_26.04.10.1_amd64.deb`, only
+`./scripts/install-citrix-workspace.sh --accept-license` is needed. Never commit
+installers, downloaded ICA files, credentials, or Citrix user state.
+
+Validation: `bash -n scripts/install-citrix-workspace.sh` and
+`python3 -m unittest discover -s tests -p 'test_citrix_install.py' -v`.
+
+## Insta360 Studio
+
+```bash
+# After the next BoxKit release publishes the image; add --nvidia on NVIDIA hosts.
+distrobox create --yes --name insta360-toolbox --image ghcr.io/dpietersz/insta360-toolbox:latest
+# Supply the exact official 6.0.5 installer recorded in the trial plan.
+distrobox enter --name insta360-toolbox -- /usr/local/bin/insta360-studio --install /absolute/path/to/installer.exe
+distrobox enter --name insta360-toolbox -- /usr/local/bin/insta360-studio
+distrobox enter --name insta360-toolbox -- distrobox-export --app /usr/share/applications/insta360-studio.desktop
+```
+
+The installer remains interactive: accept its terms yourself, decline optional QuickLook, and uncheck launch-at-finish. The helper verifies the approved SHA-256 **before execution**, uses Windows 11 / 144 DPI with the proven Qt scaling override, and blocks the optional QuickLook executables (Studio otherwise recreates their autostart). A different Studio download/build is deliberately rejected until reviewed and its checksum updated.
+
+Prefix: `${XDG_DATA_HOME:-$HOME/.local/share}/insta360-studio/prefix`. Media: **`D:\Pictures` → `~/dev/Pictures`**. Create `~/dev` before setup if it does not exist. The prefix survives toolbox recreation; never run this helper as root. Distrobox shares personal files and is not a security sandbox. Close Studio before setup/install or a toolbox update; do not overwrite source footage.
+
+Dotfiles supplies `insta360-toolbox.ini` and a host `insta360-studio` launcher through its existing creation/export flow. **Publish the BoxKit image before applying those dotfiles on a new machine.** Existing `insta360-studio-test` remains independent; no automatic prefix migration/deletion. See [trial and adoption record](Plans/insta360-studio-trial.html) for evidence, rollback and unresolved media/acceleration checks. User reports Studio works; GO 3S export correctness and NVIDIA hardware encoding are not independently certified.
 
 ## Using the custom images
 
