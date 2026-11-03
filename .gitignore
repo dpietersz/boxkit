@@ -3,3 +3,9 @@ cosign.key
 
 # ─── Local build/test artifacts ──────────────────────────────────────────────
 *.log
+__pycache__/
+*.pyc
+
+# ─── Local third-party reference clones (own upstream git repos) ────────────
+/insta360-wifi-api/
+/insta360ctl/
