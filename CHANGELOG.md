@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.4.1](https://github.com/dpietersz/boxkit/compare/v2.4.0...v2.4.1) (2026-11-08)
+
+
+### Miscellaneous
+
+* weekly package update ([0be95d5](https://github.com/dpietersz/boxkit/commit/0be95d5a2ad2a7fa2562f7b8a2ac70eb0569c6c2))
+
 ## [2.4.0](https://github.com/dpietersz/boxkit/compare/v2.3.22...v2.4.0) (2026-11-03)
 
 
